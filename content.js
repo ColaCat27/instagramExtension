@@ -3,12 +3,10 @@ window.onload = () => {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  function isVisible(e) {
-    return !!(e.offsetWidth || e.offsetHeight || e.getClientRects().length);
-  }
-
   var linksStorage = JSON.parse(window.localStorage.getItem("posts")) || []; //Здесь наши линки чтобы начать парсить
   var savedPosts = JSON.parse(window.localStorage.getItem("savedPosts")) || [];
+
+  var isVisible = false;
 
   try {
     if (window.localStorage.getItem("start")) {
@@ -98,15 +96,17 @@ window.onload = () => {
       let allPhotos = document.querySelectorAll("article	img._aagt");
       let allVideos = document.querySelectorAll("article	video");
       let awaitElem = 0;
+
       try {
-        while (allPhotos[0] === undefined || awaitElem < 5) {
+        while (allPhotos[0] === undefined && awaitElem < 20 && !isVisible) {
+          awaitElem += 1;
           allPhotos = document.querySelectorAll("article	img._aagt");
           allVideos = document.querySelectorAll("article	video");
-          console.log("Ожидаю элемент");
-          await sleep(300);
+          await sleep(150);
         }
       } catch {}
-      // console.log(`Все фото: ${allPhotos[0]}`);
+
+      isVisible = true;
 
       for (let i = 0; i < allPhotos.length; i++) {
         console.log(posts);
@@ -141,7 +141,6 @@ window.onload = () => {
         await sleep(500);
         response.click();
         let saved = JSON.parse(window.localStorage.getItem("savedPosts"));
-        console.log(`Последние посты: ${posts}`);
         saved = saved.concat(posts);
         let filtered = [];
         for (let j = 0; j < saved.length; j++) {
