@@ -44,6 +44,7 @@ window.onload = () => {
             type: "LOAD_URL",
             links: JSON.parse(window.localStorage.getItem("posts")),
             counter: counter,
+            savedLength: savedPosts.length,
           });
         }
       }
@@ -98,7 +99,12 @@ window.onload = () => {
       let awaitElem = 0;
 
       try {
-        while (allPhotos[0] === undefined && awaitElem < 20 && !isVisible) {
+        while (
+          allPhotos[0] === undefined &&
+          allVideos[0] === undefined &&
+          awaitElem < 20 &&
+          !isVisible
+        ) {
           awaitElem += 1;
           allPhotos = document.querySelectorAll("article	img._aagt");
           allVideos = document.querySelectorAll("article	video");
@@ -108,10 +114,13 @@ window.onload = () => {
 
       isVisible = true;
 
+      console.log(`Элемент: ${allPhotos[0]}`);
+
       for (let i = 0; i < allPhotos.length; i++) {
         if (!posts.includes(allPhotos[i].src)) {
           posts.push(allPhotos[i].src);
           allPhotos[i].style.filter = "grayscale(100%)";
+          console.log(`Все посты: ${posts}`);
         }
       }
 
@@ -139,15 +148,6 @@ window.onload = () => {
       .then(async (response) => {
         await sleep(500);
         response.click();
-        let saved = JSON.parse(window.localStorage.getItem("savedPosts"));
-        saved = saved.concat(posts);
-        let filtered = [];
-        for (let j = 0; j < saved.length; j++) {
-          if (!filtered.includes(saved[j])) {
-            filtered.push(saved[j]);
-          }
-        }
-        window.localStorage.setItem("savedPosts", JSON.stringify(filtered));
         await sleep(200);
         await getPhotos();
       })
@@ -157,14 +157,20 @@ window.onload = () => {
         let counter =
           parseInt(window.localStorage.getItem("scraperCounter")) + 1;
         window.localStorage.setItem("scraperCounter", counter);
-        let savedLength = JSON.parse(
-          window.localStorage.getItem("savedPosts")
-        ).length;
+        let saved = JSON.parse(window.localStorage.getItem("savedPosts"));
+        saved = saved.concat(posts);
+        let filtered = [];
+        for (let j = 0; j < saved.length; j++) {
+          if (!filtered.includes(saved[j])) {
+            filtered.push(saved[j]);
+          }
+        }
+        window.localStorage.setItem("savedPosts", JSON.stringify(filtered));
         chrome.runtime.sendMessage({
           type: "LOAD_URL",
           links: linksStorage,
           counter: counter,
-          savedLength: savedLength,
+          savedLength: filtered.length,
         });
       });
   }
