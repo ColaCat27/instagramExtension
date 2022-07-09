@@ -73,7 +73,10 @@ window.onload = () => {
 
     for (let i = 0; i < links.length; i++) {
       if (!linksStorage.includes(links[i].href)) {
-        if (links[i].href.includes("https://www.instagram.com/p/"))
+        if (
+          links[i].href.includes("https://www.instagram.com/p/") &&
+          !/(comments|liked)/.test(!links[i])
+        )
           linksStorage.push(links[i].href);
       }
     }
