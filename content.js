@@ -11,6 +11,9 @@ window.onload = () => {
       console.log(`Counter: ${counter}`);
       if (counter < linksStorage.length) {
         getPhotos();
+      } else {
+        window.localStorage.removeItem("start");
+        window.localStorage.removeItem("scraperCounter");
       }
     }
   } catch {}
@@ -19,40 +22,50 @@ window.onload = () => {
 
   chrome.runtime.onMessage.addListener(async (msg, sender, sendResponse) => {
     if (msg.type == "START") {
-      console.log(`Extension start scrape data now`);
-      let counter = 0;
-      window.localStorage.setItem("start", true);
-      window.localStorage.setItem("scraperCounter", counter);
-      chrome.runtime.sendMessage({
-        type: "LOAD_URL",
-        links: linksStorage,
-        counter: counter,
-      });
+      if (!linksStorage.length) {
+        chrome.runtime.sendMessage({
+          type: "NO_POSTS",
+        });
+      } else {
+        console.log(`Extension start scrape data now`);
+        let counter = 0;
+        window.localStorage.setItem("start", true);
+        window.localStorage.setItem("scraperCounter", counter);
+        chrome.runtime.sendMessage({
+          type: "LOAD_URL",
+          links: linksStorage,
+          counter: counter,
+        });
+      }
     }
   });
 
-  // window.addEventListener("scroll", () => {
-  //   console.log("scrolling");
-  //   getCount();
-  // });
+  window.addEventListener("scroll", () => {
+    console.log("scrolling");
+    getCount();
+  });
 
-  // async function getCount() {
-  //   let links = document.querySelectorAll("a[href*=p/*]");
+  function getCount() {
+    let links = document.querySelectorAll("a[href*=p/*]");
 
-  //   for (let i = 0; i < links.length; i++) {
-  //     if (!linksStorage.includes(links[i].href)) {
-  //       await linksStorage.push(links[i].href);
-  //     }
-  //   }
-  //   console.log(linksStorage);
-  // }
+    for (let i = 0; i < links.length; i++) {
+      if (!linksStorage.includes(links[i].href)) {
+        linksStorage.push(links[i].href);
+      }
+    }
+
+    chrome.runtime.sendMessage({
+      type: "POST_COUNT",
+      postCount: linksStorage.length,
+    });
+  }
 
   var photos = [];
 
   function getPhotos() {
     console.log("Get photos");
     new Promise(async (resolve, reject) => {
-      let isExist = document.querySelector('button[aria-label="Далее"]');
+      let isExist = document.querySelector("button._aahi");
       let counter = 0;
       let allPhotos = document.querySelectorAll("article	img._aagt");
       let allVideos = document.querySelectorAll("article	video");
@@ -85,7 +98,9 @@ window.onload = () => {
       }
     })
       .then(async (response) => {
+        await sleep(500);
         response.click();
+
         await sleep(1000);
         await getPhotos();
       })

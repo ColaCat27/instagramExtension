@@ -1,5 +1,5 @@
 {
-  "name": "chromeextension",
+  "name": "instagram extension",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
-  "author": "",
+  "author": "Vladislav <Telegram: @cyber_cat_lu>",
   "license": "ISC",
   "dependencies": {
     "@types/chrome": "^0.0.193",
