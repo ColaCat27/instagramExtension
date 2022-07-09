@@ -1,10 +1,34 @@
 window.onload = () => {
+  var linksStorage = JSON.parse(window.localStorage.getItem("posts")) || []; //Здесь наши линки чтобы начать парсить
+  var savedPosts = JSON.parse(window.localStorage.getItem("savedPosts")) || [];
+  var previousUrl = "";
+  var observer = new MutationObserver(function (mutations) {
+    let isStart = window.localStorage.getItem("start") || null;
+    if (location.href !== previousUrl && isStart === null) {
+      previousUrl = location.href;
+      console.log(`URL changed to ${location.href}`);
+      window.localStorage.removeItem("posts");
+      window.localStorage.removeItem("savedPosts");
+      linksStorage = JSON.parse(window.localStorage.getItem("posts")) || []; //Здесь наши линки чтобы начать парсить
+      savedPosts = JSON.parse(window.localStorage.getItem("savedPosts")) || [];
+
+      chrome.runtime.sendMessage({
+        type: "POSTS",
+        postsLength: linksStorage.length,
+        savedLength: savedPosts.length,
+      });
+    }
+  });
+
+  const config = { subtree: true, childList: true };
+  observer.observe(document, config);
+
   function sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  var linksStorage = JSON.parse(window.localStorage.getItem("posts")) || []; //Здесь наши линки чтобы начать парсить
-  var savedPosts = JSON.parse(window.localStorage.getItem("savedPosts")) || [];
+  // var linksStorage = JSON.parse(window.localStorage.getItem("posts")) || []; //Здесь наши линки чтобы начать парсить
+  // var savedPosts = JSON.parse(window.localStorage.getItem("savedPosts")) || [];
 
   var isVisible = false;
 
