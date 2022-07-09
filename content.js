@@ -6,7 +6,6 @@ window.onload = () => {
     let isStart = window.localStorage.getItem("start") || null;
     if (location.href !== previousUrl && isStart === null) {
       previousUrl = location.href;
-      console.log(`URL changed to ${location.href}`);
       window.localStorage.removeItem("posts");
       window.localStorage.removeItem("savedPosts");
       window.localStorage.removeItem("scraperCounter");
@@ -72,13 +71,12 @@ window.onload = () => {
       }
     }
     if (msg.type == "STOP") {
-      if (window.localStorage.getItem("start")) {
-        window.localStorage.removeItem("start");
-        console.log("Останавливаю сбор постов");
-      }
+      console.log("Останавливаю расширение");
+      window.localStorage.setItem("stop", true);
     }
 
     if (msg.type == "RESULT") {
+      console.log("Подготавливаю результат");
       window.localStorage.setItem("now", true);
     }
 
@@ -198,9 +196,10 @@ window.onload = () => {
             }
           }
           let now = JSON.parse(window.localStorage.getItem("now"));
+          let stop = JSON.parse(window.localStorage.getItem("stop"));
 
           window.localStorage.setItem("savedPosts", JSON.stringify(filtered));
-          if (!now) {
+          if (!now && !stop) {
             chrome.runtime.sendMessage({
               type: "LOAD_URL",
               links: linksStorage,
@@ -210,6 +209,13 @@ window.onload = () => {
           }
 
           let limit = JSON.parse(window.localStorage.getItem("posts")).length;
+
+          if (stop) {
+            console.log("Расширение остановлено");
+            window.localStorage.removeItem("stop");
+            window.localStorage.removeItem("start");
+            return;
+          }
 
           if (counter == limit || now) {
             window.localStorage.removeItem("start");
