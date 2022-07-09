@@ -32,14 +32,18 @@ window.onload = () => {
         let savedPosts = [];
         window.localStorage.setItem("start", true);
         window.localStorage.setItem("scraperCounter", counter);
-        window.localStorage.setItem("savedPosts", JSON.stringify(savedPosts));
+        window.localStorage.setItem("savedPosts", JSON.stringify([]));
 
         chrome.runtime.sendMessage({
           type: "LOAD_URL",
-          links: linksStorage,
+          links: JSON.parse(window.localStorage.getItem("posts")),
           counter: counter,
         });
       }
+    }
+    if (msg.type == "STOP") {
+      window.localStorage.removeItem("start");
+      console.log("Останавливаю сбор постов");
     }
     if (msg.type == "GET_COUNT") {
       chrome.runtime.sendMessage({
@@ -98,30 +102,37 @@ window.onload = () => {
 
       while (counter < 3 && !isExist) {
         counter += 1;
-        console.log("Попытка найти переключатель фото: " + counter);
+        console.log("Попытка найти еще фотографии или видео: " + counter);
         console.log("Сон 1 секунда");
         await sleep(1000);
         isExist = document.querySelector("button._aahi");
       }
       if (isExist) {
-        console.log("Переключатель найден");
+        console.log("Сохраняю фото/видео");
         resolve(isExist);
       } else {
-        console.log("Не удалось найти переключатель");
+        console.log("Больше фото/видео нету");
         reject(photos);
       }
     })
       .then(async (response) => {
         await sleep(500);
         response.click();
-
+        let saved = JSON.parse(window.localStorage.getItem("savedPosts"));
+        saved = saved.concat(photos);
+        let filtered = [];
+        for (let j = 0; j < saved.length; j++) {
+          if (!filtered.includes(saved[j])) {
+            filtered.push(saved[j]);
+          }
+        }
+        window.localStorage.setItem("savedPosts", JSON.stringify(filtered));
         await sleep(1000);
         await getPhotos();
       })
       .catch(async (photos) => {
-        console.log("Фото в списке больше нету");
-        console.log(photos);
-        console.log(`Количество полученных фото: ${photos.length}`);
+        console.log("Фото/Видео в списке больше нету");
+        console.log(`Количество полученных фото/видео: ${photos.length}`);
         let counter =
           parseInt(window.localStorage.getItem("scraperCounter")) + 1;
         window.localStorage.setItem("scraperCounter", counter);

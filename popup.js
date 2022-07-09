@@ -2,7 +2,7 @@ function loadUrl(links, counter) {
   chrome.tabs.update({ url: links[counter] });
 }
 
-function clickHandler(e) {
+function startCollect() {
   chrome.tabs.query({}, (tabs) => {
     tabs.forEach((tab) => {
       if (tab.active) {
@@ -10,27 +10,35 @@ function clickHandler(e) {
       }
     });
   });
-  // chrome.tabs.forEach((tab) => {
-  //   chrome.tab.sendMessage({ type: "START" });
-  // });
+}
+
+function stopCollect() {
+  chrome.tabs.query({}, (tabs) => {
+    tabs.forEach((tab) => {
+      if (tab.active) {
+        chrome.tabs.sendMessage(tab.id, { type: "STOP" });
+      }
+    });
+  });
 }
 
 document.addEventListener("DOMContentLoaded", function () {
-  // document.getElementById("click-me").addEventListener("click", clickHandler);
   const getPostsButton = document.getElementById("getPosts");
+  const stopCollectButton = document.getElementById("stopCollect");
   const postsLength = document.getElementById("postsLength");
   const postsSaved = document.getElementById("postsSaved");
   const extensionActive = document.getElementById("ok");
   const extensionHidden = document.getElementById("error");
   const instagramButton = document.getElementById("instagram");
-  // const collectError = document.querySelector(".collect__error");
 
-  getPostsButton.addEventListener("click", clickHandler);
+  getPostsButton.addEventListener("click", startCollect);
   instagramButton.addEventListener("click", () => {
     chrome.tabs.update({ url: "https://www.instagram.com" });
     extensionActive.classList.remove("hidden");
     extensionHidden.classList.add("hidden");
   });
+
+  stopCollectButton.addEventListener("click", stopCollect);
 
   chrome.tabs.query({}, (tabs) => {
     tabs.forEach((tab) => {
@@ -50,6 +58,7 @@ document.addEventListener("DOMContentLoaded", function () {
   chrome.runtime.onMessage.addListener((message, sender, senderResponse) => {
     if (message.type === "LOAD_URL") {
       loadUrl(message.links, message.counter);
+      postsSaved.textContent = message.counter;
     }
     if (message.type === "POST_COUNT") {
       postsLength.textContent = message.postsLength;
@@ -57,9 +66,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (message.type === "POST_SAVED") {
       postsSaved.textContent = message.postsSaved;
     }
-    // if (message.type === "NO_POSTS") {
-    //   collectError.classList.remove("hidden");
-    // }
+
     if (message.type === "POSTS_EXIST") {
     }
   });
