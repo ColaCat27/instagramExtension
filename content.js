@@ -71,13 +71,17 @@ window.onload = () => {
       }
     }
     if (msg.type == "STOP") {
-      console.log("Останавливаю расширение");
-      window.localStorage.setItem("stop", true);
+      if (!window.localStorage.getItem("stop")) {
+        console.log("Останавливаю расширение");
+        window.localStorage.setItem("stop", true);
+      }
     }
 
     if (msg.type == "RESULT") {
-      console.log("Подготавливаю результат");
-      window.localStorage.setItem("now", true);
+      if (!window.localStorage.getItem("now")) {
+        console.log("Подготавливаю результат");
+        window.localStorage.setItem("now", true);
+      }
     }
 
     if (msg.type == "GET_COUNT") {
@@ -130,7 +134,7 @@ window.onload = () => {
         while (
           allPhotos[0] === undefined &&
           allVideos[0] === undefined &&
-          awaitElem < 20
+          awaitElem < 40
         ) {
           awaitElem += 1;
           allPhotos = document.querySelectorAll("article	img._aagt");
@@ -154,7 +158,7 @@ window.onload = () => {
         for (let i = 0; i < allVideos.length; i++) {
           if (!posts.includes(allVideos[i].src)) {
             posts.push(allVideos[i].src);
-            allVideos[i].style.opacity = "0.5";
+            allVideos[i].style.filter = "grayscale(100%)";
           }
         }
       } catch {}

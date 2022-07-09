@@ -74,11 +74,20 @@ document.addEventListener("DOMContentLoaded", function () {
       if (message.counter <= message.links.length) {
         loadUrl(message.links, message.counter);
         postsSaved.textContent = message.savedLength;
+        // chrome.runtime.sendMessage({
+        //   type: "BADGE",
+        //   count: message.links.length,
+        // });
       }
     }
     if (message.type === "POSTS") {
       postsLength.textContent = message.postsLength;
       postsSaved.textContent = message.savedLength;
+
+      // chrome.runtime.sendMessage({
+      //   type: "BADGE",
+      //   count: message.postsLength,
+      // });
     }
     // if (message.type === "TASK_COMPLETE") {
     //   alert.classList.remove("hidden");
