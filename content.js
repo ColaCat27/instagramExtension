@@ -9,6 +9,7 @@ window.onload = () => {
       console.log(`URL changed to ${location.href}`);
       window.localStorage.removeItem("posts");
       window.localStorage.removeItem("savedPosts");
+      window.localStorage.removeItem("scraperCounter");
       linksStorage = JSON.parse(window.localStorage.getItem("posts")) || []; //Здесь наши линки чтобы начать парсить
       savedPosts = JSON.parse(window.localStorage.getItem("savedPosts")) || [];
 
@@ -77,8 +78,8 @@ window.onload = () => {
       }
     }
 
-    if (msg.type == "COMPLETE") {
-      console.log("Все ссылки собраны");
+    if (msg.type == "RESULT") {
+      window.localStorage.setItem("now", true);
     }
 
     if (msg.type == "GET_COUNT") {
@@ -151,12 +152,14 @@ window.onload = () => {
         }
       } catch {}
 
-      for (let i = 0; i < allVideos.length; i++) {
-        if (!posts.includes(allVideos[i].src)) {
-          posts.push(allVideos[i].src);
-          allVideos[i].style.opacity = "0.5";
+      try {
+        for (let i = 0; i < allVideos.length; i++) {
+          if (!posts.includes(allVideos[i].src)) {
+            posts.push(allVideos[i].src);
+            allVideos[i].style.opacity = "0.5";
+          }
         }
-      }
+      } catch {}
 
       while (counter < 25 && !isExist) {
         counter += 1;
@@ -182,47 +185,54 @@ window.onload = () => {
       .catch(async () => {
         // console.log("Фото/Видео в списке больше нету");
         // console.log(`Количество полученных фото/видео: ${photos.length}`);
-        let counter =
-          parseInt(window.localStorage.getItem("scraperCounter")) + 1;
-        window.localStorage.setItem("scraperCounter", counter);
-        let saved = JSON.parse(window.localStorage.getItem("savedPosts"));
-        saved = saved.concat(posts);
-        let filtered = [];
-        for (let j = 0; j < saved.length; j++) {
-          if (!filtered.includes(saved[j])) {
-            filtered.push(saved[j]);
+        try {
+          let counter =
+            parseInt(window.localStorage.getItem("scraperCounter")) + 1;
+          window.localStorage.setItem("scraperCounter", counter);
+          let saved = JSON.parse(window.localStorage.getItem("savedPosts"));
+          saved = saved.concat(posts);
+          let filtered = [];
+          for (let j = 0; j < saved.length; j++) {
+            if (!filtered.includes(saved[j])) {
+              filtered.push(saved[j]);
+            }
           }
-        }
-        window.localStorage.setItem("savedPosts", JSON.stringify(filtered));
-        chrome.runtime.sendMessage({
-          type: "LOAD_URL",
-          links: linksStorage,
-          counter: counter,
-          savedLength: filtered.length,
-        });
-        let limit = JSON.parse(window.localStorage.getItem("posts")).length;
-        console.log(`Limit: ${limit}\nCounter: ${counter}`);
-        if (counter == limit) {
-          window.localStorage.removeItem("start");
-          window.localStorage.removeItem("scraperCounter");
-          window.localStorage.removeItem("posts");
-          window.localStorage.removeItem("savedPosts");
+          let now = JSON.parse(window.localStorage.getItem("now"));
 
-          let body = document.getElementsByTagName("body")[0];
-
-          new Promise((resolve, reject) => {
-            body.innerHTML = "";
-            resolve();
-          }).then(() => {
-            filtered.forEach((item) => {
-              const p = document.createElement("p");
-              p.textContent = item;
-              body.append(p);
+          window.localStorage.setItem("savedPosts", JSON.stringify(filtered));
+          if (!now) {
+            chrome.runtime.sendMessage({
+              type: "LOAD_URL",
+              links: linksStorage,
+              counter: counter,
+              savedLength: filtered.length,
             });
-          });
+          }
 
-          // chrome.runtime.sendMessage({ type: "TASK_COMPLETE" });
-        }
+          let limit = JSON.parse(window.localStorage.getItem("posts")).length;
+
+          if (counter == limit || now) {
+            window.localStorage.removeItem("start");
+            window.localStorage.removeItem("scraperCounter");
+            window.localStorage.removeItem("posts");
+            window.localStorage.removeItem("savedPosts");
+            window.localStorage.removeItem("now");
+
+            let body = document.getElementsByTagName("body")[0];
+
+            new Promise((resolve, reject) => {
+              body.innerHTML = "";
+              resolve();
+            }).then(() => {
+              filtered.forEach((item) => {
+                const p = document.createElement("p");
+                p.textContent = item;
+                body.append(p);
+              });
+            });
+            // chrome.runtime.sendMessage({ type: "TASK_COMPLETE" });
+          }
+        } catch {}
       });
   }
 };

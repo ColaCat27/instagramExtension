@@ -2,6 +2,16 @@ function loadUrl(links, counter) {
   chrome.tabs.update({ url: links[counter] });
 }
 
+function getResult() {
+  chrome.tabs.query({}, (tabs) => {
+    tabs.forEach((tab) => {
+      if (tab.active) {
+        chrome.tabs.sendMessage(tab.id, { type: "RESULT" });
+      }
+    });
+  });
+}
+
 function startCollect() {
   chrome.tabs.query({}, (tabs) => {
     tabs.forEach((tab) => {
@@ -30,6 +40,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const extensionActive = document.getElementById("ok");
   const extensionHidden = document.getElementById("error");
   const instagramButton = document.getElementById("instagram");
+  const download = document.getElementById("settings");
   const alert = document.querySelector(".alert");
 
   getPostsButton.addEventListener("click", startCollect);
@@ -40,6 +51,8 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   stopCollectButton.addEventListener("click", stopCollect);
+
+  download.addEventListener("click", getResult);
 
   chrome.tabs.query({}, (tabs) => {
     tabs.forEach((tab) => {
