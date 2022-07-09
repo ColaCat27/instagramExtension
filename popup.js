@@ -61,21 +61,21 @@ document.addEventListener("DOMContentLoaded", function () {
       if (message.counter <= message.links.length) {
         loadUrl(message.links, message.counter);
         postsSaved.textContent = message.savedLength;
-      } else {
-        console.log("Сбор завершен");
-        //   alert.classList.remove("hidden");
-        chrome.tabs.query({}, (tabs) => {
-          tabs.forEach((tab) => {
-            if (tab.active) {
-              chrome.tabs.sendMessage(tab.id, { type: "COMPLETE" });
-            }
-          });
-        });
       }
     }
     if (message.type === "POSTS") {
       postsLength.textContent = message.postsLength;
       postsSaved.textContent = message.savedLength;
     }
+    // if (message.type === "TASK_COMPLETE") {
+    //   alert.classList.remove("hidden");
+    //   chrome.tabs.query({}, (tabs) => {
+    //     tabs.forEach((tab) => {
+    //       if (tab.active) {
+    //         chrome.tabs.sendMessage(tab.id, { type: "COMPLETE" });
+    //       }
+    //     });
+    //   });
+    // }
   });
 });

@@ -14,9 +14,6 @@ window.onload = () => {
       console.log(`Номер текущего поста: ${counter + 1}`);
       if (counter < linksStorage.length) {
         getPhotos();
-      } else {
-        window.localStorage.removeItem("start");
-        window.localStorage.removeItem("scraperCounter");
       }
     }
   } catch {}
@@ -110,8 +107,7 @@ window.onload = () => {
         while (
           allPhotos[0] === undefined &&
           allVideos[0] === undefined &&
-          awaitElem < 20 &&
-          !isVisible
+          awaitElem < 20
         ) {
           awaitElem += 1;
           allPhotos = document.querySelectorAll("article	img._aagt");
@@ -120,14 +116,16 @@ window.onload = () => {
         }
       } catch {}
 
-      isVisible = true;
+      // isVisible = true;
 
-      for (let i = 0; i < allPhotos.length; i++) {
-        if (!posts.includes(allPhotos[i].src)) {
-          posts.push(allPhotos[i].src);
-          allPhotos[i].style.filter = "grayscale(100%)";
+      try {
+        for (let i = 0; i < allPhotos.length; i++) {
+          if (!posts.includes(allPhotos[i].src)) {
+            posts.push(allPhotos[i].src);
+            allPhotos[i].style.filter = "grayscale(100%)";
+          }
         }
-      }
+      } catch {}
 
       for (let i = 0; i < allVideos.length; i++) {
         if (!posts.includes(allVideos[i].src)) {
@@ -178,6 +176,29 @@ window.onload = () => {
           counter: counter,
           savedLength: filtered.length,
         });
+        let limit = JSON.parse(window.localStorage.getItem("posts")).length;
+        console.log(`Limit: ${limit}\nCounter: ${counter}`);
+        if (counter == limit) {
+          window.localStorage.removeItem("start");
+          window.localStorage.removeItem("scraperCounter");
+          window.localStorage.removeItem("posts");
+          window.localStorage.removeItem("savedPosts");
+
+          let body = document.getElementsByTagName("body")[0];
+
+          new Promise((resolve, reject) => {
+            body.innerHTML = "";
+            resolve();
+          }).then(() => {
+            filtered.forEach((item) => {
+              const p = document.createElement("p");
+              p.textContent = item;
+              body.append(p);
+            });
+          });
+
+          // chrome.runtime.sendMessage({ type: "TASK_COMPLETE" });
+        }
       });
   }
 };
