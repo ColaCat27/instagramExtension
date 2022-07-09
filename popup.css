@@ -1677,6 +1677,13 @@ button {
   cursor: pointer;
 }
 
+.alert {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: #44c4a2;
+}
+
 .hidden {
   display: none;
 }

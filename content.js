@@ -11,7 +11,7 @@ window.onload = () => {
   try {
     if (window.localStorage.getItem("start")) {
       let counter = parseInt(window.localStorage.getItem("scraperCounter"));
-      console.log(`Номер текущего поста: ${counter}`);
+      console.log(`Номер текущего поста: ${counter + 1}`);
       if (counter < linksStorage.length) {
         getPhotos();
       } else {
@@ -55,6 +55,11 @@ window.onload = () => {
         console.log("Останавливаю сбор постов");
       }
     }
+
+    if (msg.type == "COMPLETE") {
+      console.log("Все ссылки собраны");
+    }
+
     if (msg.type == "GET_COUNT") {
       chrome.runtime.sendMessage({
         type: "POSTS",
@@ -75,7 +80,7 @@ window.onload = () => {
       if (!linksStorage.includes(links[i].href)) {
         if (
           links[i].href.includes("https://www.instagram.com/p/") &&
-          !/(comments|liked)/.test(!links[i])
+          !/(comments|liked_by)/.test(links[i])
         )
           linksStorage.push(links[i].href);
       }
@@ -127,6 +132,7 @@ window.onload = () => {
       for (let i = 0; i < allVideos.length; i++) {
         if (!posts.includes(allVideos[i].src)) {
           posts.push(allVideos[i].src);
+          allVideos[i].style.opacity = "0.5";
         }
       }
 

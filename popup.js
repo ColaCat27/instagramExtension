@@ -30,6 +30,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const extensionActive = document.getElementById("ok");
   const extensionHidden = document.getElementById("error");
   const instagramButton = document.getElementById("instagram");
+  const alert = document.querySelector(".alert");
 
   getPostsButton.addEventListener("click", startCollect);
   instagramButton.addEventListener("click", () => {
@@ -57,8 +58,20 @@ document.addEventListener("DOMContentLoaded", function () {
 
   chrome.runtime.onMessage.addListener((message, sender, senderResponse) => {
     if (message.type === "LOAD_URL") {
-      loadUrl(message.links, message.counter);
-      postsSaved.textContent = message.savedLength;
+      if (message.counter <= message.links.length) {
+        loadUrl(message.links, message.counter);
+        postsSaved.textContent = message.savedLength;
+      } else {
+        console.log("Сбор завершен");
+        //   alert.classList.remove("hidden");
+        chrome.tabs.query({}, (tabs) => {
+          tabs.forEach((tab) => {
+            if (tab.active) {
+              chrome.tabs.sendMessage(tab.id, { type: "COMPLETE" });
+            }
+          });
+        });
+      }
     }
     if (message.type === "POSTS") {
       postsLength.textContent = message.postsLength;
