@@ -43,14 +43,25 @@ document.addEventListener("DOMContentLoaded", function () {
   const download = document.getElementById("settings");
   const alert = document.querySelector(".alert");
 
-  getPostsButton.addEventListener("click", startCollect);
+  getPostsButton.addEventListener("click", () => {
+    getPostsButton.setAttribute("disabled", "true");
+    stopCollectButton.removeAttribute("disabled");
+    alert.classList.add("hidden");
+    startCollect();
+  });
+
   instagramButton.addEventListener("click", () => {
     chrome.tabs.update({ url: "https://www.instagram.com" });
     extensionActive.classList.remove("hidden");
     extensionHidden.classList.add("hidden");
   });
 
-  stopCollectButton.addEventListener("click", stopCollect);
+  stopCollectButton.addEventListener("click", () => {
+    alert.classList.add("hidden");
+    stopCollectButton.setAttribute("disabled", "true");
+    getPostsButton.removeAttribute("disabled");
+    stopCollect();
+  });
 
   download.addEventListener("click", getResult);
 
@@ -71,13 +82,26 @@ document.addEventListener("DOMContentLoaded", function () {
 
   chrome.runtime.onMessage.addListener((message, sender, senderResponse) => {
     if (message.type === "LOAD_URL") {
-      if (message.counter <= message.links.length) {
-        loadUrl(message.links, message.counter);
-        postsSaved.textContent = message.savedLength;
-        // chrome.runtime.sendMessage({
-        //   type: "BADGE",
-        //   count: message.links.length,
-        // });
+      if (message.links.length) {
+        if (message.counter <= message.links.length) {
+          loadUrl(message.links, message.counter);
+          postsSaved.textContent = message.savedLength;
+          // chrome.runtime.sendMessage({
+          //   type: "BADGE",
+          //   count: message.links.length,
+          // });
+        }
+      } else {
+        getPostsButton.removeAttribute("disabled");
+        alert.textContent = "Сначал соберите ссылки на посты";
+        alert.classList.remove("hidden");
+        chrome.tabs.query({}, (tabs) => {
+          tabs.forEach((tab) => {
+            if (tab.active) {
+              chrome.tabs.sendMessage(tab.id, { type: "RESET" });
+            }
+          });
+        });
       }
     }
     if (message.type === "POSTS") {

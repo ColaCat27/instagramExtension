@@ -60,7 +60,8 @@ window.onload = () => {
           window.localStorage.setItem("start", true);
           window.localStorage.setItem("scraperCounter", counter);
           window.localStorage.setItem("savedPosts", JSON.stringify(savedPosts));
-
+          window.localStorage.removeItem("stop");
+          window.localStorage.removeItem("now");
           chrome.runtime.sendMessage({
             type: "LOAD_URL",
             links: JSON.parse(window.localStorage.getItem("posts")),
@@ -72,13 +73,21 @@ window.onload = () => {
     }
     if (msg.type == "STOP") {
       if (!window.localStorage.getItem("stop")) {
+        alert("Останавливаю расширение");
         console.log("Останавливаю расширение");
         window.localStorage.setItem("stop", true);
       }
     }
+    if (msg.type == "RESET") {
+      alert("Сбрасываю все значения, можете повторно запустить расширение");
+      window.localStorage.removeItem("start");
+      window.localStorage.setItem("scraperCounter", 0);
+      window.localStorage.removeItem("savedPosts");
+    }
 
     if (msg.type == "RESULT") {
       if (!window.localStorage.getItem("now")) {
+        alert("Подготавливаю результат");
         console.log("Подготавливаю результат");
         window.localStorage.setItem("now", true);
       }

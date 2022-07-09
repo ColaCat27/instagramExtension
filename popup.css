@@ -1531,6 +1531,8 @@ i.fa.fa-cog {
   font-weight: 600;
   cursor: pointer;
   border-radius: 4px;
+  width: 100%;
+  border: none;
 }
 .btnrow:hover {
   background-color: #515151;
@@ -1682,6 +1684,10 @@ button {
   font-size: 12px;
   font-weight: 600;
   color: #44c4a2;
+}
+
+.btnrow:disabled {
+  opacity: 0.5;
 }
 
 .hidden {
