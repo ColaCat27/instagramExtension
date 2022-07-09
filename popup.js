@@ -58,16 +58,10 @@ document.addEventListener("DOMContentLoaded", function () {
   chrome.runtime.onMessage.addListener((message, sender, senderResponse) => {
     if (message.type === "LOAD_URL") {
       loadUrl(message.links, message.counter);
-      postsSaved.textContent = message.counter;
+      postsSaved.textContent = message.savedLength;
     }
     if (message.type === "POST_COUNT") {
       postsLength.textContent = message.postsLength;
-    }
-    if (message.type === "POST_SAVED") {
-      postsSaved.textContent = message.postsSaved;
-    }
-
-    if (message.type === "POSTS_EXIST") {
     }
   });
 });

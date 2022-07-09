@@ -28,11 +28,13 @@ window.onload = () => {
         });
       } else {
         console.log(`Расширение сохраняет посты`);
-        let counter = 0;
-        let savedPosts = [];
+        let counter =
+          JSON.parse(window.localStorage.getItem("scraperCounter")) || 0;
+        let savedPosts =
+          JSON.parse(window.localStorage.getItem("savedPosts")) || [];
         window.localStorage.setItem("start", true);
         window.localStorage.setItem("scraperCounter", counter);
-        window.localStorage.setItem("savedPosts", JSON.stringify([]));
+        window.localStorage.setItem("savedPosts", JSON.stringify(savedPosts));
 
         chrome.runtime.sendMessage({
           type: "LOAD_URL",
@@ -54,7 +56,6 @@ window.onload = () => {
   });
 
   window.addEventListener("scroll", () => {
-    console.log("scrolling");
     getCount();
   });
 
@@ -79,7 +80,6 @@ window.onload = () => {
   getCount();
 
   var photos = [];
-
   function getPhotos() {
     console.log("Get photos");
     new Promise(async (resolve, reject) => {
@@ -102,16 +102,16 @@ window.onload = () => {
 
       while (counter < 3 && !isExist) {
         counter += 1;
-        console.log("Попытка найти еще фотографии или видео: " + counter);
-        console.log("Сон 1 секунда");
-        await sleep(1000);
+        // console.log("Попытка найти еще фотографии или видео: " + counter);
+        // console.log("Сон 1 секунда");
+        await sleep(700);
         isExist = document.querySelector("button._aahi");
       }
       if (isExist) {
-        console.log("Сохраняю фото/видео");
+        // console.log("Сохраняю фото/видео");
         resolve(isExist);
       } else {
-        console.log("Больше фото/видео нету");
+        // console.log("На странице больше нету фото/видео");
         reject(photos);
       }
     })
@@ -127,19 +127,23 @@ window.onload = () => {
           }
         }
         window.localStorage.setItem("savedPosts", JSON.stringify(filtered));
-        await sleep(1000);
+        await sleep(200);
         await getPhotos();
       })
       .catch(async (photos) => {
-        console.log("Фото/Видео в списке больше нету");
-        console.log(`Количество полученных фото/видео: ${photos.length}`);
+        // console.log("Фото/Видео в списке больше нету");
+        // console.log(`Количество полученных фото/видео: ${photos.length}`);
         let counter =
           parseInt(window.localStorage.getItem("scraperCounter")) + 1;
         window.localStorage.setItem("scraperCounter", counter);
+        let savedLength = JSON.parse(
+          window.localStorage.getItem("savedPosts")
+        ).length;
         chrome.runtime.sendMessage({
           type: "LOAD_URL",
           links: linksStorage,
           counter: counter,
+          savedLength: savedLength,
         });
       });
   }
