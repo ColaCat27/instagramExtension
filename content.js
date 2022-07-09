@@ -109,7 +109,6 @@ window.onload = () => {
       isVisible = true;
 
       for (let i = 0; i < allPhotos.length; i++) {
-        console.log(posts);
         if (!posts.includes(allPhotos[i].src)) {
           posts.push(allPhotos[i].src);
           allPhotos[i].style.filter = "grayscale(100%)";
