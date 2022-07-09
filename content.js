@@ -114,13 +114,10 @@ window.onload = () => {
 
       isVisible = true;
 
-      console.log(`Элемент: ${allPhotos[0]}`);
-
       for (let i = 0; i < allPhotos.length; i++) {
         if (!posts.includes(allPhotos[i].src)) {
           posts.push(allPhotos[i].src);
           allPhotos[i].style.filter = "grayscale(100%)";
-          console.log(`Все посты: ${posts}`);
         }
       }
 
@@ -130,11 +127,11 @@ window.onload = () => {
         }
       }
 
-      while (counter < 3 && !isExist) {
+      while (counter < 25 && !isExist) {
         counter += 1;
         // console.log("Попытка найти еще фотографии или видео: " + counter);
         // console.log("Сон 1 секунда");
-        await sleep(700);
+        await sleep(100);
         isExist = document.querySelector("button._aahi");
       }
       if (isExist) {
@@ -146,7 +143,7 @@ window.onload = () => {
       }
     })
       .then(async (response) => {
-        await sleep(500);
+        await sleep(100);
         response.click();
         await sleep(200);
         await getPhotos();
