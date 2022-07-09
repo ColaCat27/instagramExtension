@@ -3,7 +3,7 @@ window.onload = () => {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  var linksStorage = []; //Здесь наши линки чтобы начать парсить
+  var linksStorage = JSON.parse(window.localStorage.getItem("posts")) || []; //Здесь наши линки чтобы начать парсить
 
   try {
     if (window.localStorage.getItem("start")) {
@@ -18,7 +18,7 @@ window.onload = () => {
     }
   } catch {}
 
-  console.log("Instagram Extension Started");
+  console.log("Расширение Instagram работает");
 
   chrome.runtime.onMessage.addListener(async (msg, sender, sendResponse) => {
     if (msg.type == "START") {
@@ -27,16 +27,25 @@ window.onload = () => {
           type: "NO_POSTS",
         });
       } else {
-        console.log(`Extension start scrape data now`);
+        console.log(`Расширение сохраняет посты`);
         let counter = 0;
+        let savedPosts = [];
         window.localStorage.setItem("start", true);
         window.localStorage.setItem("scraperCounter", counter);
+        window.localStorage.setItem("savedPosts", JSON.stringify(savedPosts));
+
         chrome.runtime.sendMessage({
           type: "LOAD_URL",
           links: linksStorage,
           counter: counter,
         });
       }
+    }
+    if (msg.type == "GET_COUNT") {
+      chrome.runtime.sendMessage({
+        type: "POST_COUNT",
+        postsLength: linksStorage.length,
+      });
     }
   });
 
@@ -50,15 +59,20 @@ window.onload = () => {
 
     for (let i = 0; i < links.length; i++) {
       if (!linksStorage.includes(links[i].href)) {
-        linksStorage.push(links[i].href);
+        if (links[i].href.includes("https://www.instagram.com/p/"))
+          linksStorage.push(links[i].href);
       }
     }
 
+    window.localStorage.setItem("posts", JSON.stringify(linksStorage));
+
     chrome.runtime.sendMessage({
       type: "POST_COUNT",
-      postCount: linksStorage.length,
+      postsLength: linksStorage.length,
     });
   }
+
+  getCount();
 
   var photos = [];
 

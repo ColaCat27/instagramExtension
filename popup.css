@@ -1677,6 +1677,14 @@ button {
   cursor: pointer;
 }
 
+.collect__error {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  color: #f26d6d;
+}
+
 .hidden {
   display: none;
 }
