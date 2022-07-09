@@ -3,13 +3,17 @@ window.onload = () => {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
+  function isVisible(e) {
+    return !!(e.offsetWidth || e.offsetHeight || e.getClientRects().length);
+  }
+
   var linksStorage = JSON.parse(window.localStorage.getItem("posts")) || []; //Здесь наши линки чтобы начать парсить
   var savedPosts = JSON.parse(window.localStorage.getItem("savedPosts")) || [];
 
   try {
     if (window.localStorage.getItem("start")) {
       let counter = parseInt(window.localStorage.getItem("scraperCounter"));
-      console.log(`Counter: ${counter}`);
+      console.log(`Номер текущего поста: ${counter}`);
       if (counter < linksStorage.length) {
         getPhotos();
       } else {
@@ -54,8 +58,9 @@ window.onload = () => {
     }
     if (msg.type == "GET_COUNT") {
       chrome.runtime.sendMessage({
-        type: "POST_COUNT",
+        type: "POSTS",
         postsLength: linksStorage.length,
+        savedLength: savedPosts.length,
       });
     }
   });
@@ -92,16 +97,28 @@ window.onload = () => {
       let counter = 0;
       let allPhotos = document.querySelectorAll("article	img._aagt");
       let allVideos = document.querySelectorAll("article	video");
+      let awaitElem = 0;
+      try {
+        while (allPhotos[0] === undefined || awaitElem < 5) {
+          allPhotos = document.querySelectorAll("article	img._aagt");
+          allVideos = document.querySelectorAll("article	video");
+          console.log("Ожидаю элемент");
+          await sleep(300);
+        }
+      } catch {}
+      // console.log(`Все фото: ${allPhotos[0]}`);
 
       for (let i = 0; i < allPhotos.length; i++) {
+        console.log(posts);
         if (!posts.includes(allPhotos[i].src)) {
-          await posts.push(allPhotos[i].src);
+          posts.push(allPhotos[i].src);
+          allPhotos[i].style.filter = "grayscale(100%)";
         }
       }
 
       for (let i = 0; i < allVideos.length; i++) {
         if (!posts.includes(allVideos[i].src)) {
-          await posts.push(allVideos[i].src);
+          posts.push(allVideos[i].src);
         }
       }
 
@@ -124,6 +141,7 @@ window.onload = () => {
         await sleep(500);
         response.click();
         let saved = JSON.parse(window.localStorage.getItem("savedPosts"));
+        console.log(`Последние посты: ${posts}`);
         saved = saved.concat(posts);
         let filtered = [];
         for (let j = 0; j < saved.length; j++) {
