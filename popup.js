@@ -60,8 +60,9 @@ document.addEventListener("DOMContentLoaded", function () {
       loadUrl(message.links, message.counter);
       postsSaved.textContent = message.savedLength;
     }
-    if (message.type === "POST_COUNT") {
+    if (message.type === "POSTS") {
       postsLength.textContent = message.postsLength;
+      postsSaved.textContent = message.savedLength;
     }
   });
 });

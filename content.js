@@ -4,6 +4,7 @@ window.onload = () => {
   }
 
   var linksStorage = JSON.parse(window.localStorage.getItem("posts")) || []; //Здесь наши линки чтобы начать парсить
+  var savedPosts = JSON.parse(window.localStorage.getItem("savedPosts")) || [];
 
   try {
     if (window.localStorage.getItem("start")) {
@@ -27,25 +28,29 @@ window.onload = () => {
           type: "NO_POSTS",
         });
       } else {
-        console.log(`Расширение сохраняет посты`);
-        let counter =
-          JSON.parse(window.localStorage.getItem("scraperCounter")) || 0;
-        let savedPosts =
-          JSON.parse(window.localStorage.getItem("savedPosts")) || [];
-        window.localStorage.setItem("start", true);
-        window.localStorage.setItem("scraperCounter", counter);
-        window.localStorage.setItem("savedPosts", JSON.stringify(savedPosts));
+        if (!window.localStorage.getItem("start")) {
+          console.log(`Расширение сохраняет посты`);
+          let counter =
+            JSON.parse(window.localStorage.getItem("scraperCounter")) || 0;
+          let savedPosts =
+            JSON.parse(window.localStorage.getItem("savedPosts")) || [];
+          window.localStorage.setItem("start", true);
+          window.localStorage.setItem("scraperCounter", counter);
+          window.localStorage.setItem("savedPosts", JSON.stringify(savedPosts));
 
-        chrome.runtime.sendMessage({
-          type: "LOAD_URL",
-          links: JSON.parse(window.localStorage.getItem("posts")),
-          counter: counter,
-        });
+          chrome.runtime.sendMessage({
+            type: "LOAD_URL",
+            links: JSON.parse(window.localStorage.getItem("posts")),
+            counter: counter,
+          });
+        }
       }
     }
     if (msg.type == "STOP") {
-      window.localStorage.removeItem("start");
-      console.log("Останавливаю сбор постов");
+      if (window.localStorage.getItem("start")) {
+        window.localStorage.removeItem("start");
+        console.log("Останавливаю сбор постов");
+      }
     }
     if (msg.type == "GET_COUNT") {
       chrome.runtime.sendMessage({
@@ -72,16 +77,16 @@ window.onload = () => {
     window.localStorage.setItem("posts", JSON.stringify(linksStorage));
 
     chrome.runtime.sendMessage({
-      type: "POST_COUNT",
+      type: "POSTS",
       postsLength: linksStorage.length,
+      savedLength: savedPosts.length,
     });
   }
 
   getCount();
 
-  var photos = [];
+  var posts = [];
   function getPhotos() {
-    console.log("Get photos");
     new Promise(async (resolve, reject) => {
       let isExist = document.querySelector("button._aahi");
       let counter = 0;
@@ -89,14 +94,14 @@ window.onload = () => {
       let allVideos = document.querySelectorAll("article	video");
 
       for (let i = 0; i < allPhotos.length; i++) {
-        if (!photos.includes(allPhotos[i].src)) {
-          await photos.push(allPhotos[i].src);
+        if (!posts.includes(allPhotos[i].src)) {
+          await posts.push(allPhotos[i].src);
         }
       }
 
       for (let i = 0; i < allVideos.length; i++) {
-        if (!photos.includes(allVideos[i].src)) {
-          await photos.push(allVideos[i].src);
+        if (!posts.includes(allVideos[i].src)) {
+          await posts.push(allVideos[i].src);
         }
       }
 
@@ -112,14 +117,14 @@ window.onload = () => {
         resolve(isExist);
       } else {
         // console.log("На странице больше нету фото/видео");
-        reject(photos);
+        reject(posts);
       }
     })
       .then(async (response) => {
         await sleep(500);
         response.click();
         let saved = JSON.parse(window.localStorage.getItem("savedPosts"));
-        saved = saved.concat(photos);
+        saved = saved.concat(posts);
         let filtered = [];
         for (let j = 0; j < saved.length; j++) {
           if (!filtered.includes(saved[j])) {
@@ -130,7 +135,7 @@ window.onload = () => {
         await sleep(200);
         await getPhotos();
       })
-      .catch(async (photos) => {
+      .catch(async () => {
         // console.log("Фото/Видео в списке больше нету");
         // console.log(`Количество полученных фото/видео: ${photos.length}`);
         let counter =
