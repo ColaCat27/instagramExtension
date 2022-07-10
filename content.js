@@ -111,15 +111,103 @@ window.onload = () => {
       }
     }
 
+    async function saveData() {
+      let video = document.querySelectorAll("article video");
+      let photo = document.querySelectorAll("article	img._aagt");
+      console.log("Поиск фото и видео");
+      for (let i = 0; i < photo.length; i++) {
+        if (photo[i].src) {
+          if (!innerPosts.includes(photo[i].src)) {
+            innerPosts.push(photo[i].src);
+            console.log(`Добавляю ссылку на фото в innerPosts ${photo[i].src}`);
+            photo[i].style.filter = "grayscale(100%)";
+          }
+        }
+      }
+
+      for (let i = 0; i < video.length; i++) {
+        if (video[i].src) {
+          if (!innerPosts.includes(video[i].src)) {
+            video[i].play();
+            await sleep(200);
+            innerPosts.push(video[i].src);
+            console.log(
+              `Добавляю ссылку на видео в innerPosts ${video[i].src}`
+            );
+            video[i].style.filter = "grayscale(100%)";
+          }
+        }
+      }
+    }
+
     function getPhotos() {
       new Promise(async (resolve, reject) => {
         let isExist = document.querySelector("button._aahi");
+        let video = document.querySelectorAll("article video");
+        let photo = document.querySelectorAll("article	img._aagt");
 
-        while (innerPosts.length < 1) {
-          await new Promise((r) => setTimeout(r, 100));
-          let video = document.querySelectorAll("article video");
-          let photo = document.querySelectorAll("article	img._aagt");
-          console.log("Поиск фото и видео");
+        try {
+          if (innerPosts.length < 1) {
+            while (!video && !photo) {
+              console.log("Жду видео и фото");
+              await new Promise((r) => setTimeout(r, 100));
+              video = document.querySelectorAll("article video");
+              photo = document.querySelectorAll("article	img._aagt");
+            }
+
+            if (video) {
+              console.log(`Видео найдено: ${video}`);
+            }
+
+            if (photo) {
+              console.log(`Фото найдено: ${photo}`);
+            }
+
+            if (video) {
+              let counter = 0;
+              while (!video[0] && counter < 350) {
+                video = document.querySelectorAll("article video");
+                counter += 1;
+                await new Promise((r) => setTimeout(r, 10));
+                console.log("Жду первое видео");
+              }
+              console.log(`Первое видео: ${video[0]}`);
+            }
+
+            if (photo) {
+              let counter = 0;
+              while (!photo[0] && counter < 350) {
+                photo = document.querySelectorAll("article	img._aagt");
+                counter += 1;
+                await new Promise((r) => setTimeout(r, 10));
+                console.log("Жду первое фото");
+              }
+              console.log(`Первое фото: ${photo[0]}`);
+            }
+
+            if (video[0]) {
+              let counter = 0;
+              while (!video[0].src && counter < 50) {
+                counter += 1;
+                await new Promise((r) => setTimeout(r, 10));
+                console.log("Жду ссылку на видео");
+              }
+              console.log("Ссылка на видео: " + video[0].src);
+            }
+
+            if (photo[0]) {
+              let counter = 0;
+              while (!photo[0].src && counter < 50) {
+                counter += 1;
+                await new Promise((r) => setTimeout(r, 10));
+                console.log("Жду ссылку на фото");
+              }
+              console.log("Ссылка на фото: " + photo[0].src);
+            }
+          } else {
+            await new Promise((r) => setTimeout(r, 150));
+          }
+
           for (let i = 0; i < photo.length; i++) {
             if (photo[i].src) {
               if (!innerPosts.includes(photo[i].src)) {
@@ -135,6 +223,8 @@ window.onload = () => {
           for (let i = 0; i < video.length; i++) {
             if (video[i].src) {
               if (!innerPosts.includes(video[i].src)) {
+                video[i].play();
+                await sleep(200);
                 innerPosts.push(video[i].src);
                 console.log(
                   `Добавляю ссылку на видео в innerPosts ${video[i].src}`
@@ -143,9 +233,7 @@ window.onload = () => {
               }
             }
           }
-        }
-
-        console.log(`Inner posts: ${innerPosts}`);
+        } catch {}
 
         let counter = 0;
         while (counter < 25 && !isExist) {
