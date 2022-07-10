@@ -66,12 +66,8 @@ window.onload = () => {
 
     var observer = new MutationObserver(async function (mutations) {
       isWorking = await getData("isWorking");
-      let inSavedPosts = await getData("savedPosts");
-      if (
-        location.href !== previousUrl &&
-        !isWorking &&
-        inSavedPosts.lenght < 1
-      ) {
+      let getNow = await getData("getNow");
+      if (location.href !== previousUrl && !isWorking && !getNow) {
         previousUrl = location.href;
         console.log("reset");
         reset(); //обнуляем значения в storage
@@ -118,12 +114,15 @@ window.onload = () => {
     function getPhotos() {
       new Promise(async (resolve, reject) => {
         let isExist = document.querySelector("button._aahi");
-
         while (innerPosts.length < 1) {
           await new Promise((r) => setTimeout(r, 100));
           let video = document.querySelectorAll("article video");
           let photo = document.querySelectorAll("article	img._aagt");
           console.log("Поиск фото и видео");
+          await sleep(200);
+          console.log(
+            `Videos length: ${video.length}\nPhotos length: ${photo.length}`
+          );
           for (let i = 0; i < photo.length; i++) {
             if (photo[i].src) {
               if (!innerPosts.includes(photo[i].src)) {
@@ -170,7 +169,6 @@ window.onload = () => {
         .then(async (response) => {
           await sleep(100);
           response.click();
-          await sleep(200);
           getPhotos();
         })
         .catch(async () => {
