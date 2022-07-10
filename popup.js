@@ -15,52 +15,6 @@ function loadUrl(links, counter) {
   chrome.tabs.update({ url: links[counter] });
 }
 
-function getResult() {}
-
-async function startCollect() {
-  let isWorking = await getData("isWorking");
-  let posts = await getData("posts");
-  // if (!isWorking) {
-  //   alert.textContent = "Расширение работает";
-  //   alert.classLis.remove("alert_error");
-  //   alert.classLis.add("alert_ok");
-  //   alert.remove("hidden");
-
-  //   let scraperCounter = (await getData("scraperCounter")) || 0;
-
-  //   let posts = await getData("posts");
-
-  //   let savedPosts = (await getData("savedPosts")) || [];
-
-  //   chrome.storage.local.set({ isWorking: true });
-
-  //   chrome.storage.local.set({ getNow: false });
-
-  //   if (posts.length && posts.length < scraperCounter) {
-  //   } else {
-  //     getPostsButton.removeAttribute("disabled");
-
-  //     if (posts.length >= scraperCounter) {
-  //       alert.textContent = "Все ссылки собраны";
-  //     } else {
-  //       alert.textContent = "Сначала соберите ссылки на посты";
-  //     }
-
-  //     alert.classList.remove("hidden");
-  //     alert.classList.remove("alert_ok");
-  //     alert.classList.add("alert_error");
-  //   }
-
-  //   loadUrl(posts, scraperCounter);
-  // }
-}
-
-function stopCollect() {
-  if (window.runtime.session.get("isWorking")) {
-    chrome.storage.local.set("isWorking", false);
-  }
-}
-
 document.addEventListener("DOMContentLoaded", async function () {
   const getPostsButton = document.getElementById("getPosts");
   const stopCollectButton = document.getElementById("stopCollect");
@@ -70,7 +24,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   const extensionHidden = document.getElementById("error");
   const instagramButton = document.getElementById("instagram");
   const download = document.getElementById("settings");
-  const alert = document.querySelector(".alert");
+  let alert = document.querySelector(".alert");
 
   //установка актуальных значения в popup
   await getData("posts").then((posts) => {
@@ -92,11 +46,33 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   //----------------------------------------
 
-  getPostsButton.addEventListener("click", () => {
-    getPostsButton.setAttribute("disabled", "true");
-    stopCollectButton.removeAttribute("disabled");
-    alert.classList.add("hidden");
-    startCollect();
+  getPostsButton.addEventListener("click", async () => {
+    let isWorking = await getData("isWorking");
+
+    let posts = await getData("posts");
+
+    if (!isWorking) {
+      let scraperCounter = (await getData("scraperCounter")) || 0;
+      console.log(posts);
+      if (posts.length && scraperCounter < posts.length) {
+        chrome.storage.local.set({ isWorking: true });
+
+        chrome.storage.local.set({ getNow: false });
+
+        getPostsButton.setAttribute("disabled", "true");
+        stopCollectButton.removeAttribute("disabled");
+        alert.textContent = "Расширение собирает посты";
+        alert.classList.remove("hidden");
+
+        loadUrl(posts, scraperCounter);
+      } else {
+        alert.textContent = "Вы еще не собрали ссылки на посты";
+        alert.classList.remove("hidden");
+      }
+    } else {
+      alert.textContent = "Расширение уже собирает посты";
+      alert.classList.remove("hidden");
+    }
   });
 
   instagramButton.addEventListener("click", () => {
@@ -105,17 +81,18 @@ document.addEventListener("DOMContentLoaded", async function () {
     extensionHidden.classList.add("hidden");
   });
 
-  stopCollectButton.addEventListener("click", () => {
-    alert.textContent = "Останавливаю сбор постов, подождите немного"; //Сюда вернуть ответ о том что расширение полностью остановлено
-    alert.classList.remove("hidden");
-    alert.classList.remove("alert_error");
-    alert.classList.add("alert_ok");
-    stopCollectButton.setAttribute("disabled", "true");
-    getPostsButton.removeAttribute("disabled");
-    stopCollect();
+  stopCollectButton.addEventListener("click", async () => {
+    let isWorking = await getData("isWorking");
+    if (isWorking) {
+      alert.textContent = "Останавливаю сбор постов, подождите немного"; //Сюда вернуть ответ о том что расширение полностью остановлено
+      alert.classList.remove("hidden");
+      stopCollectButton.setAttribute("disabled", "true");
+      getPostsButton.removeAttribute("disabled");
+      chrome.storage.local.set({ isWorking: false });
+    }
   });
 
-  download.addEventListener("click", getResult);
+  // download.addEventListener("click", async () => {});
 
   chrome.tabs.query({}, (tabs) => {
     tabs.forEach((tab) => {
