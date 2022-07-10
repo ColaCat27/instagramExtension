@@ -95,19 +95,25 @@ document.addEventListener("DOMContentLoaded", async function () {
       alert.classList.remove("hidden");
       stopCollectButton.setAttribute("disabled", "true");
       getPostsButton.removeAttribute("disabled");
-      chrome.storage.local.set({ isWorking: false });
+      chrome.storage.local.set({ isWorking: false, getNow: false });
     }
   });
 
   download.addEventListener("click", async () => {
-    chrome.storage.local.set({
-      isWorking: false,
-      posts: [],
-      scraperCounter: 0,
-      getNow: true,
-    });
-    savedPosts.textContent = "0";
-    alert.textContent = "Сохраняю результат";
+    let savedPosts = await getData("savedPosts");
+    if (savedPosts) {
+      chrome.storage.local.set({
+        isWorking: false,
+        posts: [],
+        scraperCounter: 0,
+        getNow: true,
+      });
+      savedPosts.textContent = "0";
+      alert.textContent = "Сохраняю результат";
+      if (alert.classList.contains("hidden")) {
+        alert.classList.remove("hidden");
+      }
+    }
   });
 
   chrome.tabs.query({}, (tabs) => {

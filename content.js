@@ -19,15 +19,23 @@ window.onload = () => {
       });
     }
 
-    async function showResult() {
+    async function showResult(data = false) {
       let body = document.getElementsByTagName("body")[0];
-      let result = await getData("savedPosts");
+      let result;
+      if (data) {
+        console.log(`Income data: ${data}`);
+        result = data;
+      } else {
+        result = await getData("savedPosts");
+        console.log(`Storage data: ${result}`);
+      }
       new Promise((resolve, reject) => {
         body.innerHTML = "";
         resolve();
       })
         .then(() => {
           result.forEach((item) => {
+            console.log(`Create element: ${item}`);
             const p = document.createElement("p");
             p.textContent = item;
             body.append(p);
@@ -73,7 +81,7 @@ window.onload = () => {
     try {
       if (isWorking) {
         let posts = await getData("posts");
-        console.log(`Номер текущего поста: ${scraperCounter}`);
+        console.log(`Номер текущего поста: ${scraperCounter + 1}`);
         if (scraperCounter < posts.length) {
           getPhotos();
         }
@@ -162,7 +170,7 @@ window.onload = () => {
           await sleep(200);
           await getPhotos();
         })
-        .catch(async () => {
+        .catch(async (inPos) => {
           // console.log("Фото/Видео в списке больше нету");
           // console.log(`Количество полученных фото/видео: ${photos.length}`);
           try {
@@ -171,9 +179,10 @@ window.onload = () => {
             chrome.storage.local.set({
               scraperCounter: scraperCounter,
             });
-
+            console.log(`inPos: ${inPos}`);
             let savedPosts = await getData("savedPosts");
-            savedPosts = savedPosts.concat(innerPosts);
+            savedPosts = savedPosts.concat(inPos);
+            console.log(`Saved posts: ${savedPosts}`);
 
             let filtered = [];
             for (let j = 0; j < savedPosts.length; j++) {
@@ -187,18 +196,22 @@ window.onload = () => {
             });
 
             let posts = await getData("posts");
+            let getNow = await getData("getNow");
 
             if (scraperCounter < posts.length) {
               window.location.href = posts[scraperCounter];
             } else {
-              showResult();
-              chrome.storage.local.set({
-                isWorking: false,
-                posts: [],
-                scraperCounter: 0,
-                getNow: false,
-              });
-              return;
+              if (isWorking || getNow) {
+                console.log(`Data for save: ${filtered}`);
+                showResult(filtered);
+                chrome.storage.local.set({
+                  isWorking: false,
+                  posts: [],
+                  scraperCounter: 0,
+                  getNow: false,
+                });
+                return;
+              }
             }
           } catch {}
         });
