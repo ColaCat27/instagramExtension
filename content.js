@@ -1,16 +1,18 @@
 window.onload = () => {
-  var linksStorage = JSON.parse(window.localStorage.getItem("posts")) || []; //Здесь наши линки чтобы начать парсить
-  var savedPosts = JSON.parse(window.localStorage.getItem("savedPosts")) || [];
+  var linksStorage = JSON.parse(window.sessionStorage.getItem("posts")) || []; //Здесь наши линки чтобы начать парсить
+  var savedPosts =
+    JSON.parse(window.sessionStorage.getItem("savedPosts")) || [];
   var previousUrl = "";
   var observer = new MutationObserver(function (mutations) {
-    let isStart = window.localStorage.getItem("start") || null;
+    let isStart = window.sessionStorage.getItem("start") || null;
     if (location.href !== previousUrl && isStart === null) {
       previousUrl = location.href;
-      window.localStorage.removeItem("posts");
-      window.localStorage.removeItem("savedPosts");
-      window.localStorage.removeItem("scraperCounter");
-      linksStorage = JSON.parse(window.localStorage.getItem("posts")) || []; //Здесь наши линки чтобы начать парсить
-      savedPosts = JSON.parse(window.localStorage.getItem("savedPosts")) || [];
+      window.sessionStorage.removeItem("posts");
+      window.sessionStorage.removeItem("savedPosts");
+      window.sessionStorage.removeItem("scraperCounter");
+      linksStorage = JSON.parse(window.sessionStorage.getItem("posts")) || []; //Здесь наши линки чтобы начать парсить
+      savedPosts =
+        JSON.parse(window.sessionStorage.getItem("savedPosts")) || [];
 
       chrome.runtime.sendMessage({
         type: "POSTS",
@@ -27,14 +29,14 @@ window.onload = () => {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  // var linksStorage = JSON.parse(window.localStorage.getItem("posts")) || []; //Здесь наши линки чтобы начать парсить
-  // var savedPosts = JSON.parse(window.localStorage.getItem("savedPosts")) || [];
+  // var linksStorage = JSON.parse(window.sessionStorage.getItem("posts")) || []; //Здесь наши линки чтобы начать парсить
+  // var savedPosts = JSON.parse(window.sessionStorage.getItem("savedPosts")) || [];
 
   var isVisible = false;
 
   try {
-    if (window.localStorage.getItem("start")) {
-      let counter = parseInt(window.localStorage.getItem("scraperCounter"));
+    if (window.sessionStorage.getItem("start")) {
+      let counter = parseInt(window.sessionStorage.getItem("scraperCounter"));
       console.log(`Номер текущего поста: ${counter + 1}`);
       if (counter < linksStorage.length) {
         getPhotos();
@@ -51,20 +53,23 @@ window.onload = () => {
           type: "NO_POSTS",
         });
       } else {
-        if (!window.localStorage.getItem("start")) {
+        if (!window.sessionStorage.getItem("start")) {
           console.log(`Расширение сохраняет посты`);
           let counter =
-            JSON.parse(window.localStorage.getItem("scraperCounter")) || 0;
+            JSON.parse(window.sessionStorage.getItem("scraperCounter")) || 0;
           let savedPosts =
-            JSON.parse(window.localStorage.getItem("savedPosts")) || [];
-          window.localStorage.setItem("start", true);
-          window.localStorage.setItem("scraperCounter", counter);
-          window.localStorage.setItem("savedPosts", JSON.stringify(savedPosts));
-          window.localStorage.removeItem("stop");
-          window.localStorage.removeItem("now");
+            JSON.parse(window.sessionStorage.getItem("savedPosts")) || [];
+          window.sessionStorage.setItem("start", true);
+          window.sessionStorage.setItem("scraperCounter", counter);
+          window.sessionStorage.setItem(
+            "savedPosts",
+            JSON.stringify(savedPosts)
+          );
+          window.sessionStorage.removeItem("stop");
+          window.sessionStorage.removeItem("now");
           chrome.runtime.sendMessage({
             type: "LOAD_URL",
-            links: JSON.parse(window.localStorage.getItem("posts")),
+            links: JSON.parse(window.sessionStorage.getItem("posts")),
             counter: counter,
             savedLength: savedPosts.length,
           });
@@ -72,24 +77,24 @@ window.onload = () => {
       }
     }
     if (msg.type == "STOP") {
-      if (!window.localStorage.getItem("stop")) {
+      if (!window.sessionStorage.getItem("stop")) {
         alert("Останавливаю расширение");
         console.log("Останавливаю расширение");
-        window.localStorage.setItem("stop", true);
+        window.sessionStorage.setItem("stop", true);
       }
     }
     if (msg.type == "RESET") {
       alert("Сбрасываю все значения, можете повторно запустить расширение");
-      window.localStorage.removeItem("start");
-      window.localStorage.setItem("scraperCounter", 0);
-      window.localStorage.removeItem("savedPosts");
+      window.sessionStorage.removeItem("start");
+      window.sessionStorage.setItem("scraperCounter", 0);
+      window.sessionStorage.removeItem("savedPosts");
     }
 
     if (msg.type == "RESULT") {
-      if (!window.localStorage.getItem("now")) {
+      if (!window.sessionStorage.getItem("now")) {
         alert("Подготавливаю результат");
         console.log("Подготавливаю результат");
-        window.localStorage.setItem("now", true);
+        window.sessionStorage.setItem("now", true);
       }
     }
 
@@ -119,7 +124,7 @@ window.onload = () => {
       }
     }
 
-    window.localStorage.setItem("posts", JSON.stringify(linksStorage));
+    window.sessionStorage.setItem("posts", JSON.stringify(linksStorage));
 
     chrome.runtime.sendMessage({
       type: "POSTS",
@@ -198,9 +203,9 @@ window.onload = () => {
         // console.log(`Количество полученных фото/видео: ${photos.length}`);
         try {
           let counter =
-            parseInt(window.localStorage.getItem("scraperCounter")) + 1;
-          window.localStorage.setItem("scraperCounter", counter);
-          let saved = JSON.parse(window.localStorage.getItem("savedPosts"));
+            parseInt(window.sessionStorage.getItem("scraperCounter")) + 1;
+          window.sessionStorage.setItem("scraperCounter", counter);
+          let saved = JSON.parse(window.sessionStorage.getItem("savedPosts"));
           saved = saved.concat(posts);
           let filtered = [];
           for (let j = 0; j < saved.length; j++) {
@@ -208,10 +213,10 @@ window.onload = () => {
               filtered.push(saved[j]);
             }
           }
-          let now = JSON.parse(window.localStorage.getItem("now"));
-          let stop = JSON.parse(window.localStorage.getItem("stop"));
+          let now = JSON.parse(window.sessionStorage.getItem("now"));
+          let stop = JSON.parse(window.sessionStorage.getItem("stop"));
 
-          window.localStorage.setItem("savedPosts", JSON.stringify(filtered));
+          window.sessionStorage.setItem("savedPosts", JSON.stringify(filtered));
           if (!now && !stop) {
             chrome.runtime.sendMessage({
               type: "LOAD_URL",
@@ -221,21 +226,21 @@ window.onload = () => {
             });
           }
 
-          let limit = JSON.parse(window.localStorage.getItem("posts")).length;
+          let limit = JSON.parse(window.sessionStorage.getItem("posts")).length;
 
           if (stop) {
             console.log("Расширение остановлено");
-            window.localStorage.removeItem("stop");
-            window.localStorage.removeItem("start");
+            window.sessionStorage.removeItem("stop");
+            window.sessionStorage.removeItem("start");
             return;
           }
 
           if (counter == limit || now) {
-            window.localStorage.removeItem("start");
-            window.localStorage.removeItem("scraperCounter");
-            window.localStorage.removeItem("posts");
-            window.localStorage.removeItem("savedPosts");
-            window.localStorage.removeItem("now");
+            window.sessionStorage.removeItem("start");
+            window.sessionStorage.removeItem("scraperCounter");
+            window.sessionStorage.removeItem("posts");
+            window.sessionStorage.removeItem("savedPosts");
+            window.sessionStorage.removeItem("now");
 
             let body = document.getElementsByTagName("body")[0];
 

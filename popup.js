@@ -91,18 +91,20 @@ document.addEventListener("DOMContentLoaded", function () {
           //   count: message.links.length,
           // });
         }
-      } else {
-        getPostsButton.removeAttribute("disabled");
-        alert.textContent = "Сначал соберите ссылки на посты";
-        alert.classList.remove("hidden");
-        chrome.tabs.query({}, (tabs) => {
-          tabs.forEach((tab) => {
-            if (tab.active) {
-              chrome.tabs.sendMessage(tab.id, { type: "RESET" });
-            }
-          });
-        });
       }
+    }
+    if (message.type === "NO_POSTS") {
+      getPostsButton.removeAttribute("disabled");
+      console.log("Нету ссылок");
+      alert.innerHTML = "<span>Сначал соберите ссылки на посты</span>";
+      alert.classList.remove("hidden");
+      chrome.tabs.query({}, (tabs) => {
+        tabs.forEach((tab) => {
+          if (tab.active) {
+            chrome.tabs.sendMessage(tab.id, { type: "RESET" });
+          }
+        });
+      });
     }
     if (message.type === "POSTS") {
       postsLength.textContent = message.postsLength;
