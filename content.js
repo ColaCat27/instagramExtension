@@ -82,127 +82,127 @@ window.onload = async () => {
 
   var innerPosts = [];
 
-  // function getPhotos() {
-  //   new Promise(async (resolve, reject) => {
-  //     let isExist = document.querySelector("button._aahi");
-  //     let counter = 0;
-  //     let allPhotos = document.querySelectorAll("article	img._aagt");
-  //     let allVideos = document.querySelectorAll("article	video");
-  //     let awaitElem = 0;
+  function getPhotos() {
+    new Promise(async (resolve, reject) => {
+      let isExist = document.querySelector("button._aahi");
+      let counter = 0;
+      let allPhotos = document.querySelectorAll("article	img._aagt");
+      let allVideos = document.querySelectorAll("article	video");
+      let awaitElem = 0;
 
-  //     try {
-  //       while (
-  //         allPhotos[0] === undefined &&
-  //         allVideos[0] === undefined &&
-  //         awaitElem < 40
-  //       ) {
-  //         awaitElem += 1;
-  //         allPhotos = document.querySelectorAll("article	img._aagt");
-  //         allVideos = document.querySelectorAll("article	video");
-  //         await sleep(150);
-  //       }
-  //     } catch {}
+      try {
+        while (
+          allPhotos[0] === undefined &&
+          allVideos[0] === undefined &&
+          awaitElem < 40
+        ) {
+          awaitElem += 1;
+          allPhotos = document.querySelectorAll("article	img._aagt");
+          allVideos = document.querySelectorAll("article	video");
+          await sleep(150);
+        }
+      } catch {}
 
-  //     // isVisible = true;
+      // isVisible = true;
 
-  //     try {
-  //       for (let i = 0; i < allPhotos.length; i++) {
-  //         if (!innerPosts.includes(allPhotos[i].src)) {
-  //           innerPosts.push(allPhotos[i].src);
-  //           allPhotos[i].style.filter = "grayscale(100%)";
-  //         }
-  //       }
-  //     } catch {}
+      try {
+        for (let i = 0; i < allPhotos.length; i++) {
+          if (!innerPosts.includes(allPhotos[i].src)) {
+            innerPosts.push(allPhotos[i].src);
+            allPhotos[i].style.filter = "grayscale(100%)";
+          }
+        }
+      } catch {}
 
-  //     try {
-  //       for (let i = 0; i < allVideos.length; i++) {
-  //         if (!innerPosts.includes(allVideos[i].src)) {
-  //           innerPosts.push(allVideos[i].src);
-  //           allVideos[i].style.filter = "grayscale(100%)";
-  //         }
-  //       }
-  //     } catch {}
+      try {
+        for (let i = 0; i < allVideos.length; i++) {
+          if (!innerPosts.includes(allVideos[i].src)) {
+            innerPosts.push(allVideos[i].src);
+            allVideos[i].style.filter = "grayscale(100%)";
+          }
+        }
+      } catch {}
 
-  //     while (counter < 25 && !isExist) {
-  //       counter += 1;
-  //       // console.log("Попытка найти еще фотографии или видео: " + counter);
-  //       // console.log("Сон 1 секунда");
-  //       await sleep(100);
-  //       isExist = document.querySelector("button._aahi");
-  //     }
-  //     if (isExist) {
-  //       // console.log("Сохраняю фото/видео");
-  //       resolve(isExist);
-  //     } else {
-  //       // console.log("На странице больше нету фото/видео");
-  //       reject(innerPosts);
-  //     }
-  //   })
-  //     .then(async (response) => {
-  //       await sleep(100);
-  //       response.click();
-  //       await sleep(200);
-  //       await getPhotos();
-  //     })
-  //     .catch(async () => {
-  //       // console.log("Фото/Видео в списке больше нету");
-  //       // console.log(`Количество полученных фото/видео: ${photos.length}`);
-  //       try {
-  //         let counter =
-  //           parseInt(window.sessionStorage.getItem("scraperCounter")) + 1;
-  //         window.sessionStorage.setItem("scraperCounter", counter);
-  //         let saved = JSON.parse(window.sessionStorage.getItem("savedPosts"));
-  //         saved = saved.concat(innerPosts);
-  //         let filtered = [];
-  //         for (let j = 0; j < saved.length; j++) {
-  //           if (!filtered.includes(saved[j])) {
-  //             filtered.push(saved[j]);
-  //           }
-  //         }
-  //         let now = JSON.parse(window.sessionStorage.getItem("now"));
-  //         let stop = JSON.parse(window.sessionStorage.getItem("stop"));
+      while (counter < 25 && !isExist) {
+        counter += 1;
+        // console.log("Попытка найти еще фотографии или видео: " + counter);
+        // console.log("Сон 1 секунда");
+        await sleep(100);
+        isExist = document.querySelector("button._aahi");
+      }
+      if (isExist) {
+        // console.log("Сохраняю фото/видео");
+        resolve(isExist);
+      } else {
+        // console.log("На странице больше нету фото/видео");
+        reject(innerPosts);
+      }
+    })
+      .then(async (response) => {
+        await sleep(100);
+        response.click();
+        await sleep(200);
+        await getPhotos();
+      })
+      .catch(async () => {
+        // console.log("Фото/Видео в списке больше нету");
+        // console.log(`Количество полученных фото/видео: ${photos.length}`);
+        try {
+          let counter =
+            parseInt(window.sessionStorage.getItem("scraperCounter")) + 1;
+          window.sessionStorage.setItem("scraperCounter", counter);
+          let saved = JSON.parse(window.sessionStorage.getItem("savedPosts"));
+          saved = saved.concat(innerPosts);
+          let filtered = [];
+          for (let j = 0; j < saved.length; j++) {
+            if (!filtered.includes(saved[j])) {
+              filtered.push(saved[j]);
+            }
+          }
+          let now = JSON.parse(window.sessionStorage.getItem("now"));
+          let stop = JSON.parse(window.sessionStorage.getItem("stop"));
 
-  //         window.sessionStorage.setItem("savedPosts", JSON.stringify(filtered));
-  //         if (!now && !stop) {
-  //           chrome.runtime.sendMessage({
-  //             type: "LOAD_URL",
-  //             links: posts,
-  //             counter: counter,
-  //             savedLength: filtered.length,
-  //           });
-  //         }
+          window.sessionStorage.setItem("savedPosts", JSON.stringify(filtered));
+          if (!now && !stop) {
+            chrome.runtime.sendMessage({
+              type: "LOAD_URL",
+              links: posts,
+              counter: counter,
+              savedLength: filtered.length,
+            });
+          }
 
-  //         let limit = JSON.parse(window.sessionStorage.getItem("posts")).length;
+          let limit = JSON.parse(window.sessionStorage.getItem("posts")).length;
 
-  //         if (stop) {
-  //           console.log("Расширение остановлено");
-  //           window.sessionStorage.removeItem("stop");
-  //           window.sessionStorage.removeItem("start");
-  //           return;
-  //         }
+          if (stop) {
+            console.log("Расширение остановлено");
+            window.sessionStorage.removeItem("stop");
+            window.sessionStorage.removeItem("start");
+            return;
+          }
 
-  //         if (counter == limit || now) {
-  //           window.sessionStorage.removeItem("start");
-  //           window.sessionStorage.removeItem("scraperCounter");
-  //           window.sessionStorage.removeItem("posts");
-  //           window.sessionStorage.removeItem("savedPosts");
-  //           window.sessionStorage.removeItem("now");
+          if (counter == limit || now) {
+            window.sessionStorage.removeItem("start");
+            window.sessionStorage.removeItem("scraperCounter");
+            window.sessionStorage.removeItem("posts");
+            window.sessionStorage.removeItem("savedPosts");
+            window.sessionStorage.removeItem("now");
 
-  //           let body = document.getElementsByTagName("body")[0];
+            let body = document.getElementsByTagName("body")[0];
 
-  //           new Promise((resolve, reject) => {
-  //             body.innerHTML = "";
-  //             resolve();
-  //           }).then(() => {
-  //             filtered.forEach((item) => {
-  //               const p = document.createElement("p");
-  //               p.textContent = item;
-  //               body.append(p);
-  //             });
-  //           });
-  //           // chrome.runtime.sendMessage({ type: "TASK_COMPLETE" });
-  //         }
-  //       } catch {}
-  //     });
-  // }
+            new Promise((resolve, reject) => {
+              body.innerHTML = "";
+              resolve();
+            }).then(() => {
+              filtered.forEach((item) => {
+                const p = document.createElement("p");
+                p.textContent = item;
+                body.append(p);
+              });
+            });
+            // chrome.runtime.sendMessage({ type: "TASK_COMPLETE" });
+          }
+        } catch {}
+      });
+  }
 };

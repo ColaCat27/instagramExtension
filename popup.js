@@ -35,6 +35,16 @@ document.addEventListener("DOMContentLoaded", async function () {
     postsSaved.textContent = savedPosts.length || 0;
   });
 
+  await getData("isWorking").then((isWorking) => {
+    if (isWorking) {
+      getPostsButton.setAttribute("disabled", true);
+      stopCollectButton.removeAttribute("disabled");
+    } else {
+      stopCollectButton.setAttribute("disabled", true);
+      getPostsButton.removeAttribute("disabled");
+    }
+  });
+
   chrome.storage.onChanged.addListener(function (changes, namespace) {
     if (changes.posts) {
       postsLength.textContent = changes.posts.newValue.length; //установка актуального значения для количества собранных постов
@@ -84,7 +94,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   stopCollectButton.addEventListener("click", async () => {
     let isWorking = await getData("isWorking");
     if (isWorking) {
-      alert.textContent = "Останавливаю сбор постов, подождите немного"; //Сюда вернуть ответ о том что расширение полностью остановлено
+      alert.textContent = "Останавливаю сбор постов"; //Сюда вернуть ответ о том что расширение полностью остановлено
       alert.classList.remove("hidden");
       stopCollectButton.setAttribute("disabled", "true");
       getPostsButton.removeAttribute("disabled");
