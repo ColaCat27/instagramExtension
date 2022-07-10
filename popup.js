@@ -108,7 +108,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         scraperCounter: 0,
         getNow: true,
       });
-      savedPosts.textContent = "0";
+      postsSaved.textContent = "0";
       alert.textContent = "Сохраняю результат";
       if (alert.classList.contains("hidden")) {
         alert.classList.remove("hidden");
