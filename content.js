@@ -1,180 +1,190 @@
-window.onload = async () => {
-  //фукнция для получения значений из нашего storage
-  function getData(sKey) {
-    return new Promise(function (resolve, reject) {
-      chrome.storage.local.get(sKey, function (items) {
-        if (chrome.runtime.lastError) {
-          console.error(chrome.runtime.lastError.message);
-          reject(chrome.runtime.lastError.message);
-        } else {
-          resolve(items[sKey]);
-        }
+window.onload = () => {
+  (async () => {
+    //фукнция для получения значений из нашего storage
+    function getData(sKey) {
+      return new Promise(function (resolve, reject) {
+        chrome.storage.local.get(sKey, function (items) {
+          if (chrome.runtime.lastError) {
+            console.error(chrome.runtime.lastError.message);
+            reject(chrome.runtime.lastError.message);
+          } else {
+            resolve(items[sKey]);
+          }
+        });
       });
-    });
-  }
-
-  async function showResult() {
-    let body = document.getElementsByTagName("body")[0];
-    let result = await getData();
-    new Promise((resolve, reject) => {
-      body.innerHTML = "";
-      resolve();
-    }).then(() => {
-      result.forEach((item) => {
-        const p = document.createElement("p");
-        p.textContent = item;
-        body.append(p);
-      });
-    });
-  }
-
-  function reset() {
-    chrome.storage.local.set({ posts: [] });
-    chrome.storage.local.set({ savedPosts: [] });
-    chrome.storage.local.set({ scraperCounter: 0 });
-  }
-
-  function sleep(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-  }
-
-  //obeserver для сброса значений при переходе на другую страницу
-  var previousUrl = "";
-
-  let isWorking = await getData("isWorking");
-  var scraperCounter = parseInt(await getData("scraperCounter"));
-
-  var observer = new MutationObserver(async function (mutations) {
-    isWorking = await getData("isWorking");
-
-    if (location.href !== previousUrl && !isWorking) {
-      previousUrl = location.href;
-      reset(); //обнуляем значения в storage
     }
-  });
 
-  const config = { subtree: true, childList: true };
-  observer.observe(document, config);
+    async function showResult() {
+      let body = document.getElementsByTagName("body")[0];
+      let result = await getData();
+      new Promise((resolve, reject) => {
+        body.innerHTML = "";
+        resolve();
+      }).then(() => {
+        result.forEach((item) => {
+          const p = document.createElement("p");
+          p.textContent = item;
+          body.append(p);
+        });
+      });
+    }
 
-  if (!isWorking) {
-    console.log("Расширение Instagram работает");
-  }
+    function reset() {
+      chrome.storage.local.set({ posts: [] });
+      chrome.storage.local.set({ savedPosts: [] });
+      chrome.storage.local.set({ scraperCounter: 0 });
+    }
 
-  try {
-    if (isWorking) {
-      console.log(`Номер текущего поста: ${scraperCounter + 1}`);
-      if (scraperCounter < posts.length) {
-        getPhotos();
+    function sleep(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
+    //obeserver для сброса значений при переходе на другую страницу
+    var previousUrl = "";
+
+    let isWorking = await getData("isWorking");
+    var scraperCounter = parseInt(await getData("scraperCounter"));
+
+    var observer = new MutationObserver(async function (mutations) {
+      isWorking = await getData("isWorking");
+
+      if (location.href !== previousUrl && !isWorking) {
+        previousUrl = location.href;
+        console.log("Выполняю reset");
+        reset(); //обнуляем значения в storage
       }
+    });
+
+    const config = { subtree: true, childList: true };
+    observer.observe(document, config);
+
+    if (!isWorking) {
+      console.log("Расширение Instagram работает");
     }
-  } catch {}
 
-  window.addEventListener("scroll", () => {
-    getCount();
-  });
-
-  async function getCount() {
-    let links = document.querySelectorAll("a[href*=p/*]");
-    let posts = await getData("posts");
-    for (let i = 0; i < links.length; i++) {
-      if (!posts.includes(links[i].href)) {
-        if (
-          links[i].href.includes("https://www.instagram.com/p/") &&
-          !/(comments|liked_by)/.test(links[i])
-        ) {
-          posts.push(links[i].href);
-          chrome.storage.local.set({ posts: posts });
+    try {
+      if (isWorking) {
+        let posts = await getData("posts");
+        console.log(`Всего постов: ${posts.length}`);
+        console.log(`Номер текущего поста: ${scraperCounter}`);
+        if (scraperCounter < posts.length) {
+          getPhotos();
         }
       }
-    }
-  }
+    } catch {}
 
-  var innerPosts = [];
+    window.addEventListener("scroll", () => {
+      getCount();
+    });
 
-  function getPhotos() {
-    new Promise(async (resolve, reject) => {
-      let isExist = document.querySelector("button._aahi"),
-        counter = 0,
-        allPhotos = document.querySelectorAll("article	img._aagt"),
-        allVideos = document.querySelectorAll("article	video"),
-        awaitElem = 0;
-
-      try {
-        while (
-          allPhotos[0] === undefined &&
-          allVideos[0] === undefined &&
-          awaitElem < 40
-        ) {
-          awaitElem += 1;
-          allPhotos = document.querySelectorAll("article	img._aagt");
-          allVideos = document.querySelectorAll("article	video");
-          await sleep(150);
-        }
-      } catch {}
-
-      try {
-        for (let i = 0; i < allPhotos.length; i++) {
-          if (!innerPosts.includes(allPhotos[i].src)) {
-            innerPosts.push(allPhotos[i].src);
-            allPhotos[i].style.filter = "grayscale(100%)";
+    async function getCount() {
+      let links = document.querySelectorAll("a[href*=p/*]");
+      let posts = await getData("posts");
+      for (let i = 0; i < links.length; i++) {
+        if (!posts.includes(links[i].href)) {
+          if (
+            links[i].href.includes("https://www.instagram.com/p/") &&
+            !/(comments|liked_by)/.test(links[i])
+          ) {
+            posts.push(links[i].href);
+            chrome.storage.local.set({ posts: posts });
           }
         }
-      } catch {}
-
-      try {
-        for (let i = 0; i < allVideos.length; i++) {
-          if (!innerPosts.includes(allVideos[i].src)) {
-            innerPosts.push(allVideos[i].src);
-            allVideos[i].style.filter = "grayscale(100%)";
-          }
-        }
-      } catch {}
-
-      while (counter < 25 && !isExist) {
-        counter += 1;
-        // console.log("Попытка найти еще фотографии или видео: " + counter);
-        // console.log("Сон 1 секунда");
-        await sleep(100);
-        isExist = document.querySelector("button._aahi");
       }
-      if (isExist) {
-        // console.log("Сохраняю фото/видео");
-        resolve(isExist);
-      } else {
-        // console.log("На странице больше нету фото/видео");
-        reject(innerPosts);
-      }
-    })
-      .then(async (response) => {
-        await sleep(100);
-        response.click();
-        await sleep(200);
-        await getPhotos();
-      })
-      .catch(async () => {
-        // console.log("Фото/Видео в списке больше нету");
-        // console.log(`Количество полученных фото/видео: ${photos.length}`);
+    }
+
+    var innerPosts = [];
+
+    function getPhotos() {
+      new Promise(async (resolve, reject) => {
+        let isExist = document.querySelector("button._aahi"),
+          counter = 0,
+          allPhotos = document.querySelectorAll("article	img._aagt"),
+          allVideos = document.querySelectorAll("article	video"),
+          awaitElem = 0;
+
+        console.log("Функция начала работу");
+
         try {
-          let scraperCounter = await getData("scraperCounter");
-          scraperCounter += 1;
-          chrome.storage.local.set({
-            scraperCounter: scraperCounter,
-          });
+          while (
+            allPhotos[0] === undefined &&
+            allVideos[0] === undefined &&
+            awaitElem < 40
+          ) {
+            awaitElem += 1;
+            allPhotos = document.querySelectorAll("article	img._aagt");
+            allVideos = document.querySelectorAll("article	video");
+            await sleep(150);
+          }
+        } catch {}
 
-          let savedPosts = await getData("savedPosts");
-          savedPosts = savedPosts.concat(innerPosts);
-
-          let filtered = [];
-          for (let j = 0; j < savedPosts.length; j++) {
-            if (!filtered.includes(savedPosts[j])) {
-              filtered.push(savedPosts[j]);
+        try {
+          for (let i = 0; i < allPhotos.length; i++) {
+            if (!innerPosts.includes(allPhotos[i].src)) {
+              innerPosts.push(allPhotos[i].src);
+              allPhotos[i].style.filter = "grayscale(100%)";
             }
           }
-
-          chrome.storage.local.set({
-            savedPosts: filtered,
-          });
         } catch {}
-      });
-  }
+
+        try {
+          for (let i = 0; i < allVideos.length; i++) {
+            if (!innerPosts.includes(allVideos[i].src)) {
+              innerPosts.push(allVideos[i].src);
+              allVideos[i].style.filter = "grayscale(100%)";
+            }
+          }
+        } catch {}
+
+        while (counter < 25 && !isExist) {
+          counter += 1;
+          // console.log("Попытка найти еще фотографии или видео: " + counter);
+          // console.log("Сон 1 секунда");
+          await sleep(100);
+          isExist = document.querySelector("button._aahi");
+        }
+        if (isExist) {
+          // console.log("Сохраняю фото/видео");
+          resolve(isExist);
+        } else {
+          // console.log("На странице больше нету фото/видео");
+          reject(innerPosts);
+        }
+      })
+        .then(async (response) => {
+          await sleep(100);
+          response.click();
+          await sleep(200);
+          await getPhotos();
+        })
+        .catch(async () => {
+          // console.log("Фото/Видео в списке больше нету");
+          // console.log(`Количество полученных фото/видео: ${photos.length}`);
+          try {
+            let scraperCounter = await getData("scraperCounter");
+            scraperCounter += 1;
+            chrome.storage.local.set({
+              scraperCounter: scraperCounter,
+            });
+
+            let savedPosts = await getData("savedPosts");
+            savedPosts = savedPosts.concat(innerPosts);
+
+            let filtered = [];
+            for (let j = 0; j < savedPosts.length; j++) {
+              if (!filtered.includes(savedPosts[j])) {
+                filtered.push(savedPosts[j]);
+              }
+            }
+
+            chrome.storage.local.set({
+              savedPosts: filtered,
+            });
+
+            let posts = await getData("posts");
+            window.location.href = posts[scraperCounter];
+          } catch {}
+        });
+    }
+  })();
 };

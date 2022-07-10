@@ -63,7 +63,6 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     if (!isWorking) {
       let scraperCounter = (await getData("scraperCounter")) || 0;
-      console.log(posts);
       if (posts.length && scraperCounter < posts.length) {
         chrome.storage.local.set({ isWorking: true });
 
