@@ -1,5 +1,10 @@
 window.onload = () => {
   (async () => {
+    let isResult = await getData("getNow");
+    if (isResult) {
+      showResult();
+      return;
+    }
     //фукнция для получения значений из нашего storage
     function getData(sKey) {
       return new Promise(function (resolve, reject) {
@@ -16,17 +21,21 @@ window.onload = () => {
 
     async function showResult() {
       let body = document.getElementsByTagName("body")[0];
-      let result = await getData();
+      let result = await getData("savedPosts");
       new Promise((resolve, reject) => {
         body.innerHTML = "";
         resolve();
-      }).then(() => {
-        result.forEach((item) => {
-          const p = document.createElement("p");
-          p.textContent = item;
-          body.append(p);
+      })
+        .then(() => {
+          result.forEach((item) => {
+            const p = document.createElement("p");
+            p.textContent = item;
+            body.append(p);
+          });
+        })
+        .then(() => {
+          chrome.storage.local.set({ savedPosts: [], getNow: false });
         });
-      });
     }
 
     function reset() {
@@ -102,8 +111,6 @@ window.onload = () => {
           allPhotos = document.querySelectorAll("article	img._aagt"),
           allVideos = document.querySelectorAll("article	video"),
           awaitElem = 0;
-
-        console.log("Функция начала работу");
 
         try {
           while (

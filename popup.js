@@ -64,9 +64,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     if (!isWorking) {
       let scraperCounter = (await getData("scraperCounter")) || 0;
       if (posts.length && scraperCounter < posts.length) {
-        chrome.storage.local.set({ isWorking: true });
-
-        chrome.storage.local.set({ getNow: false });
+        chrome.storage.local.set({ isWorking: true, getNow: false });
 
         getPostsButton.setAttribute("disabled", "true");
         stopCollectButton.removeAttribute("disabled");
@@ -101,7 +99,16 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
   });
 
-  // download.addEventListener("click", async () => {});
+  download.addEventListener("click", async () => {
+    chrome.storage.local.set({
+      isWorking: false,
+      posts: [],
+      scraperCounter: 0,
+      getNow: true,
+    });
+    savedPosts.textContent = "0";
+    alert.textContent = "Сохраняю результат";
+  });
 
   chrome.tabs.query({}, (tabs) => {
     tabs.forEach((tab) => {
