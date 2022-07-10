@@ -13,7 +13,20 @@ window.onload = async () => {
     });
   }
 
-  // chrome.storage.local.set({ posts: [] });
+  async function showResult() {
+    let body = document.getElementsByTagName("body")[0];
+    let result = await getData();
+    new Promise((resolve, reject) => {
+      body.innerHTML = "";
+      resolve();
+    }).then(() => {
+      result.forEach((item) => {
+        const p = document.createElement("p");
+        p.textContent = item;
+        body.append(p);
+      });
+    });
+  }
 
   function reset() {
     chrome.storage.local.set({ posts: [] });
@@ -42,8 +55,6 @@ window.onload = async () => {
 
   const config = { subtree: true, childList: true };
   observer.observe(document, config);
-
-  var isVisible = false;
 
   if (!isWorking) {
     console.log("Расширение Instagram работает");
@@ -78,17 +89,15 @@ window.onload = async () => {
     }
   }
 
-  getCount();
-
   var innerPosts = [];
 
   function getPhotos() {
     new Promise(async (resolve, reject) => {
-      let isExist = document.querySelector("button._aahi");
-      let counter = 0;
-      let allPhotos = document.querySelectorAll("article	img._aagt");
-      let allVideos = document.querySelectorAll("article	video");
-      let awaitElem = 0;
+      let isExist = document.querySelector("button._aahi"),
+        counter = 0,
+        allPhotos = document.querySelectorAll("article	img._aagt"),
+        allVideos = document.querySelectorAll("article	video"),
+        awaitElem = 0;
 
       try {
         while (
@@ -102,8 +111,6 @@ window.onload = async () => {
           await sleep(150);
         }
       } catch {}
-
-      // isVisible = true;
 
       try {
         for (let i = 0; i < allPhotos.length; i++) {
@@ -148,60 +155,25 @@ window.onload = async () => {
         // console.log("Фото/Видео в списке больше нету");
         // console.log(`Количество полученных фото/видео: ${photos.length}`);
         try {
-          let counter =
-            parseInt(window.sessionStorage.getItem("scraperCounter")) + 1;
-          window.sessionStorage.setItem("scraperCounter", counter);
-          let saved = JSON.parse(window.sessionStorage.getItem("savedPosts"));
-          saved = saved.concat(innerPosts);
+          let scraperCounter = await getData("scraperCounter");
+          scraperCounter += 1;
+          chrome.storage.local.set({
+            scraperCounter: scraperCounter,
+          });
+
+          let savedPosts = await getData("savedPosts");
+          savedPosts = savedPosts.concat(innerPosts);
+
           let filtered = [];
-          for (let j = 0; j < saved.length; j++) {
-            if (!filtered.includes(saved[j])) {
-              filtered.push(saved[j]);
+          for (let j = 0; j < savedPosts.length; j++) {
+            if (!filtered.includes(savedPosts[j])) {
+              filtered.push(savedPosts[j]);
             }
           }
-          let now = JSON.parse(window.sessionStorage.getItem("now"));
-          let stop = JSON.parse(window.sessionStorage.getItem("stop"));
 
-          window.sessionStorage.setItem("savedPosts", JSON.stringify(filtered));
-          if (!now && !stop) {
-            chrome.runtime.sendMessage({
-              type: "LOAD_URL",
-              links: posts,
-              counter: counter,
-              savedLength: filtered.length,
-            });
-          }
-
-          let limit = JSON.parse(window.sessionStorage.getItem("posts")).length;
-
-          if (stop) {
-            console.log("Расширение остановлено");
-            window.sessionStorage.removeItem("stop");
-            window.sessionStorage.removeItem("start");
-            return;
-          }
-
-          if (counter == limit || now) {
-            window.sessionStorage.removeItem("start");
-            window.sessionStorage.removeItem("scraperCounter");
-            window.sessionStorage.removeItem("posts");
-            window.sessionStorage.removeItem("savedPosts");
-            window.sessionStorage.removeItem("now");
-
-            let body = document.getElementsByTagName("body")[0];
-
-            new Promise((resolve, reject) => {
-              body.innerHTML = "";
-              resolve();
-            }).then(() => {
-              filtered.forEach((item) => {
-                const p = document.createElement("p");
-                p.textContent = item;
-                body.append(p);
-              });
-            });
-            // chrome.runtime.sendMessage({ type: "TASK_COMPLETE" });
-          }
+          chrome.storage.local.set({
+            savedPosts: filtered,
+          });
         } catch {}
       });
   }
