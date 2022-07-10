@@ -20,7 +20,7 @@
     "ids": ["*"],
     "matches": ["https://www.google.com/", "https://www.instagram.com/*"]
   },
-  "permissions": ["tabs"],
+  "permissions": ["tabs", "storage"],
   "icons": {
     "16": "img/logo_16.png",
     "48": "img/logo_48.png",

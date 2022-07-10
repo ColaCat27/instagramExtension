@@ -1,38 +1,67 @@
+function getData(sKey) {
+  return new Promise(function (resolve, reject) {
+    chrome.storage.local.get(sKey, function (items) {
+      if (chrome.runtime.lastError) {
+        console.error(chrome.runtime.lastError.message);
+        reject(chrome.runtime.lastError.message);
+      } else {
+        resolve(items[sKey]);
+      }
+    });
+  });
+}
+
 function loadUrl(links, counter) {
   chrome.tabs.update({ url: links[counter] });
 }
 
-function getResult() {
-  chrome.tabs.query({}, (tabs) => {
-    tabs.forEach((tab) => {
-      if (tab.active) {
-        chrome.tabs.sendMessage(tab.id, { type: "RESULT" });
-      }
-    });
-  });
-}
+function getResult() {}
 
-function startCollect() {
-  chrome.tabs.query({}, (tabs) => {
-    tabs.forEach((tab) => {
-      if (tab.active) {
-        chrome.tabs.sendMessage(tab.id, { type: "START" });
-      }
-    });
-  });
+async function startCollect() {
+  let isWorking = await getData("isWorking");
+  let posts = await getData("posts");
+  // if (!isWorking) {
+  //   alert.textContent = "Расширение работает";
+  //   alert.classLis.remove("alert_error");
+  //   alert.classLis.add("alert_ok");
+  //   alert.remove("hidden");
+
+  //   let scraperCounter = (await getData("scraperCounter")) || 0;
+
+  //   let posts = await getData("posts");
+
+  //   let savedPosts = (await getData("savedPosts")) || [];
+
+  //   chrome.storage.local.set({ isWorking: true });
+
+  //   chrome.storage.local.set({ getNow: false });
+
+  //   if (posts.length && posts.length < scraperCounter) {
+  //   } else {
+  //     getPostsButton.removeAttribute("disabled");
+
+  //     if (posts.length >= scraperCounter) {
+  //       alert.textContent = "Все ссылки собраны";
+  //     } else {
+  //       alert.textContent = "Сначала соберите ссылки на посты";
+  //     }
+
+  //     alert.classList.remove("hidden");
+  //     alert.classList.remove("alert_ok");
+  //     alert.classList.add("alert_error");
+  //   }
+
+  //   loadUrl(posts, scraperCounter);
+  // }
 }
 
 function stopCollect() {
-  chrome.tabs.query({}, (tabs) => {
-    tabs.forEach((tab) => {
-      if (tab.active) {
-        chrome.tabs.sendMessage(tab.id, { type: "STOP" });
-      }
-    });
-  });
+  if (window.runtime.session.get("isWorking")) {
+    chrome.storage.local.set("isWorking", false);
+  }
 }
 
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", async function () {
   const getPostsButton = document.getElementById("getPosts");
   const stopCollectButton = document.getElementById("stopCollect");
   const postsLength = document.getElementById("postsLength");
@@ -42,6 +71,26 @@ document.addEventListener("DOMContentLoaded", function () {
   const instagramButton = document.getElementById("instagram");
   const download = document.getElementById("settings");
   const alert = document.querySelector(".alert");
+
+  //установка актуальных значения в popup
+  await getData("posts").then((posts) => {
+    postsLength.textContent = posts.length;
+  });
+
+  await getData("savedPosts").then((savedPosts) => {
+    postsSaved.textContent = savedPosts.length || 0;
+  });
+
+  chrome.storage.onChanged.addListener(function (changes, namespace) {
+    if (changes.posts) {
+      postsLength.textContent = changes.posts.newValue.length; //установка актуального значения для количества собранных постов
+    }
+    if (changes.savedPosts) {
+      postsSaved.textContent = changes.savedPosts.newValue.length; //установка актуального значения для сохраненных внутренних постов
+    }
+  });
+
+  //----------------------------------------
 
   getPostsButton.addEventListener("click", () => {
     getPostsButton.setAttribute("disabled", "true");
@@ -57,7 +106,10 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   stopCollectButton.addEventListener("click", () => {
-    alert.classList.add("hidden");
+    alert.textContent = "Останавливаю сбор постов, подождите немного"; //Сюда вернуть ответ о том что расширение полностью остановлено
+    alert.classList.remove("hidden");
+    alert.classList.remove("alert_error");
+    alert.classList.add("alert_ok");
     stopCollectButton.setAttribute("disabled", "true");
     getPostsButton.removeAttribute("disabled");
     stopCollect();
@@ -78,52 +130,5 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       }
     });
-  });
-
-  chrome.runtime.onMessage.addListener((message, sender, senderResponse) => {
-    if (message.type === "LOAD_URL") {
-      if (message.links.length) {
-        if (message.counter <= message.links.length) {
-          loadUrl(message.links, message.counter);
-          postsSaved.textContent = message.savedLength;
-          // chrome.runtime.sendMessage({
-          //   type: "BADGE",
-          //   count: message.links.length,
-          // });
-        }
-      }
-    }
-    if (message.type === "NO_POSTS") {
-      getPostsButton.removeAttribute("disabled");
-      console.log("Нету ссылок");
-      alert.innerHTML = "<span>Сначал соберите ссылки на посты</span>";
-      alert.classList.remove("hidden");
-      chrome.tabs.query({}, (tabs) => {
-        tabs.forEach((tab) => {
-          if (tab.active) {
-            chrome.tabs.sendMessage(tab.id, { type: "RESET" });
-          }
-        });
-      });
-    }
-    if (message.type === "POSTS") {
-      postsLength.textContent = message.postsLength;
-      postsSaved.textContent = message.savedLength;
-
-      // chrome.runtime.sendMessage({
-      //   type: "BADGE",
-      //   count: message.postsLength,
-      // });
-    }
-    // if (message.type === "TASK_COMPLETE") {
-    //   alert.classList.remove("hidden");
-    //   chrome.tabs.query({}, (tabs) => {
-    //     tabs.forEach((tab) => {
-    //       if (tab.active) {
-    //         chrome.tabs.sendMessage(tab.id, { type: "COMPLETE" });
-    //       }
-    //     });
-    //   });
-    // }
   });
 });

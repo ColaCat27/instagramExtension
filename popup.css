@@ -1683,9 +1683,14 @@ button {
   text-align: center;
   font-size: 12px;
   font-weight: 600;
-  color: #44c4a2;
 }
 
+.alert_ok {
+  color: #44c4a2;
+}
+.alert_error {
+  color: #e05050;
+}
 .btnrow:disabled {
   opacity: 0.5;
 }
