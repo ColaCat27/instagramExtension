@@ -59,7 +59,6 @@ window.onload = () => {
 
       if (location.href !== previousUrl && !isWorking) {
         previousUrl = location.href;
-        console.log("Выполняю reset");
         reset(); //обнуляем значения в storage
       }
     });
@@ -74,7 +73,6 @@ window.onload = () => {
     try {
       if (isWorking) {
         let posts = await getData("posts");
-        console.log(`Всего постов: ${posts.length}`);
         console.log(`Номер текущего поста: ${scraperCounter}`);
         if (scraperCounter < posts.length) {
           getPhotos();
@@ -189,7 +187,19 @@ window.onload = () => {
             });
 
             let posts = await getData("posts");
-            window.location.href = posts[scraperCounter];
+
+            if (scraperCounter < posts.length) {
+              window.location.href = posts[scraperCounter];
+            } else {
+              showResult();
+              chrome.storage.local.set({
+                isWorking: false,
+                posts: [],
+                scraperCounter: 0,
+                getNow: false,
+              });
+              return;
+            }
           } catch {}
         });
     }
