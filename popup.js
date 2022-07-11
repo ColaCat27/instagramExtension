@@ -20,30 +20,37 @@ document.addEventListener("DOMContentLoaded", async function () {
   const stopCollectButton = document.getElementById("stopCollect");
   const postsLength = document.getElementById("postsLength");
   const postsSaved = document.getElementById("postsSaved");
-  const extensionActive = document.getElementById("ok");
-  const extensionHidden = document.getElementById("error");
-  const instagramButton = document.getElementById("instagram");
   const download = document.getElementById("settings");
   let alert = document.querySelector(".alert");
 
-  //установка актуальных значения в popup
-  await getData("posts").then((posts) => {
-    postsLength.textContent = posts.length;
-  });
+  try {
+    const instagramButton = document.getElementById("instagram");
 
-  await getData("savedPosts").then((savedPosts) => {
-    postsSaved.textContent = savedPosts.length || 0;
-  });
-
-  await getData("isWorking").then((isWorking) => {
-    if (isWorking) {
-      getPostsButton.setAttribute("disabled", true);
-      stopCollectButton.removeAttribute("disabled");
-    } else {
-      stopCollectButton.setAttribute("disabled", true);
-      getPostsButton.removeAttribute("disabled");
+    if (instagramButton) {
+      instagramButton.addEventListener("click", () => {
+        chrome.tabs.update({ url: "https://www.instagram.com" });
+      });
     }
-  });
+
+    await getData("posts").then((posts) => {
+      postsLength.textContent = posts.length;
+    });
+
+    await getData("savedPosts").then((savedPosts) => {
+      postsSaved.textContent = savedPosts.length || 0;
+    });
+
+    await getData("isWorking").then((isWorking) => {
+      if (isWorking) {
+        getPostsButton.setAttribute("disabled", true);
+        stopCollectButton.removeAttribute("disabled");
+      } else {
+        stopCollectButton.setAttribute("disabled", true);
+        getPostsButton.removeAttribute("disabled");
+      }
+    });
+  } catch {}
+  //установка актуальных значения в popup
 
   chrome.storage.onChanged.addListener(function (changes, namespace) {
     if (changes.posts) {
@@ -82,12 +89,6 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
   });
 
-  instagramButton.addEventListener("click", () => {
-    chrome.tabs.update({ url: "https://www.instagram.com" });
-    extensionActive.classList.remove("hidden");
-    extensionHidden.classList.add("hidden");
-  });
-
   stopCollectButton.addEventListener("click", async () => {
     let isWorking = await getData("isWorking");
     if (isWorking) {
@@ -95,7 +96,12 @@ document.addEventListener("DOMContentLoaded", async function () {
       alert.classList.remove("hidden");
       stopCollectButton.setAttribute("disabled", "true");
       getPostsButton.removeAttribute("disabled");
-      chrome.storage.local.set({ isWorking: false, getNow: false });
+      chrome.storage.local.set({
+        isWorking: false,
+        getNow: false,
+        savedPosts: [],
+        posts: [],
+      });
     }
   });
 
@@ -114,20 +120,5 @@ document.addEventListener("DOMContentLoaded", async function () {
         alert.classList.remove("hidden");
       }
     }
-  });
-
-  chrome.tabs.query({}, (tabs) => {
-    tabs.forEach((tab) => {
-      if (tab.active) {
-        if (tab.url.includes("instagram.com")) {
-          extensionActive.classList.remove("hidden");
-          extensionHidden.classList.add("hidden");
-          chrome.tabs.sendMessage(tab.id, { type: "GET_COUNT" });
-        } else {
-          extensionActive.classList.add("hidden");
-          extensionHidden.classList.remove("hidden");
-        }
-      }
-    });
   });
 });

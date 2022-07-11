@@ -9,7 +9,7 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://www.google.com/", "https://www.instagram.com/*"],
+      "matches": ["https://www.instagram.com/*"],
       "js": ["content.js"],
       "all_frames": true,
       "run_at": "document_end"
@@ -18,7 +18,7 @@
   "web_accessible_resources": ["content.js"],
   "externally_connectable": {
     "ids": ["*"],
-    "matches": ["https://www.google.com/", "https://www.instagram.com/*"]
+    "matches": ["https://www.instagram.com/*"]
   },
   "permissions": ["tabs", "storage"],
   "icons": {
@@ -27,7 +27,6 @@
     "128": "img/logo_128.png"
   },
   "browser_action": {
-    "default_title": "Instagram extension",
-    "default_popup": "popup.html"
+    "default_title": "Instagram extension"
   }
 }

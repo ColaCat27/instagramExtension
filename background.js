@@ -1,7 +1,7 @@
 chrome.runtime.onInstalled.addListener(() => {
   chrome.tabs.query({}, (tabs) => {
     tabs.forEach((tab) => {
-      if (tab.url.includes("www.instagram.com")) {
+      if (/^https:\/\/www.instagram.com/.test(tab.url)) {
         chrome.browserAction.setBadgeText({
           tabId: tab.id,
           text: "0",
@@ -9,6 +9,21 @@ chrome.runtime.onInstalled.addListener(() => {
       }
     });
   });
+});
+
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  // Additionally, you can check for changeInfo.status
+  if (/^https:\/\/www.instagram.com/.test(tab.url)) {
+    chrome.browserAction.setPopup({
+      tabId: tab.id, // Set the new popup for this tab.
+      popup: "on_popup.html", // Open this html file within the popup.
+    });
+  } else {
+    chrome.browserAction.setPopup({
+      tabId: tab.id, // Set the new popup for this tab.
+      popup: "off_popup.html", // Open this html file within the popup.
+    });
+  }
 });
 
 chrome.storage.onChanged.addListener((changes) => {
@@ -23,7 +38,7 @@ chrome.storage.onChanged.addListener((changes) => {
 
     chrome.tabs.query({}, (tabs) => {
       tabs.forEach((tab) => {
-        if (tab.url.includes("www.instagram.com")) {
+        if (/^https:\/\/www.instagram.com/.test(tab.url)) {
           chrome.browserAction.setBadgeText({
             tabId: tab.id,
             text: length,
